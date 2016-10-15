@@ -1,0 +1,67 @@
+//	The chip will multiply 2 numbers.
+
+CHIP Mul{
+
+
+    IN a[16], b[16];
+
+    OUT out[16];
+
+  
+ 
+ PARTS:
+	// The only possibile digit mult results are either only zeroes or the input 'a' shifted 1 to 15 times
+
+	ShiftLeft(in=a, out=a1);
+	ShiftLeft(in=a1, out=a2);
+	ShiftLeft(in=a2, out=a3);
+	ShiftLeft(in=a3, out=a4);
+	ShiftLeft(in=a4, out=a5);
+	ShiftLeft(in=a5, out=a6);
+	ShiftLeft(in=a6, out=a7);
+	ShiftLeft(in=a7, out=a8);
+	ShiftLeft(in=a8, out=a9);
+	ShiftLeft(in=a9, out=a10);
+	ShiftLeft(in=a10, out=a11);
+	ShiftLeft(in=a11, out=a12);
+	ShiftLeft(in=a12, out=a13);
+	ShiftLeft(in=a13, out=a14);
+	ShiftLeft(in=a14, out=a15);
+	
+	// Choose between the two possibilities described above
+
+	Mux16(a=false, b=a, sel=b[0], out=b0);
+	Mux16(a=false, b=a1, sel=b[1], out=toaddone);
+	Mux16(a=false, b=a2, sel=b[2], out=toaddtwo);
+	Mux16(a=false, b=a3, sel=b[3], out=toaddthree);
+	Mux16(a=false, b=a4, sel=b[4], out=toaddfour);
+	Mux16(a=false, b=a5, sel=b[5], out=toaddfive);
+	Mux16(a=false, b=a6, sel=b[6], out=toaddsix);
+	Mux16(a=false, b=a7, sel=b[7], out=toaddseven);
+	Mux16(a=false, b=a8, sel=b[8], out=toaddeight);
+	Mux16(a=false, b=a9, sel=b[9], out=toaddnine);
+	Mux16(a=false, b=a10, sel=b[10], out=toaddten);
+	Mux16(a=false, b=a11, sel=b[11], out=toaddeleven);
+	Mux16(a=false, b=a12, sel=b[12], out=toaddtwelve);
+	Mux16(a=false, b=a13, sel=b[13], out=toaddthirteen);
+	Mux16(a=false, b=a14, sel=b[14], out=toaddfourteen);
+	Mux16(a=false, b=a15, sel=b[15], out=toaddfifteen);
+	
+	//Add the results of the digit multiplication for the final output
+
+	Add16(a=toaddone, b=toaddtwo, out=tempone);
+	Add16(a=toaddthree, b=tempone, out=temptwo);
+	Add16(a=toaddfour, b=temptwo, out=tempthree);
+	Add16(a=toaddfive, b=tempthree, out=tempfour);
+	Add16(a=toaddsix, b=tempfour, out=tempfive);
+	Add16(a=toaddseven, b=tempfive, out=tempsix);
+	Add16(a=toaddeight, b=tempsix, out=tempseven);
+	Add16(a=toaddnine, b=tempseven, out=tempeight);
+	Add16(a=toaddten, b=tempeight, out=tempnine);
+	Add16(a=toaddeleven, b=tempnine, out=tempten);
+	Add16(a=toaddtwelve, b=tempten, out=tempeleven);
+	Add16(a=toaddthirteen, b=tempeleven, out=temptwelve);
+	Add16(a=toaddfourteen, b=temptwelve, out=tempthirteen);
+	Add16(a=toaddfifteen, b=tempthirteen, out=tempfourteen);
+	Add16(a=b0, b=tempfourteen, out=out);
+}
