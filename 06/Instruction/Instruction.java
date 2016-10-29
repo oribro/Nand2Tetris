@@ -73,6 +73,14 @@ public abstract class Instruction {
 		compTable.put("D&M", "1000000");
 		compTable.put("D|M", "1010101");
 		
+		// Shift operations
+		
+		compTable.put("D<<", "101011");
+		compTable.put("D>>", "101001");
+		compTable.put("A<<", "101010");
+		compTable.put("A>>", "101000");
+		compTable.put("M<<", "101110");
+		compTable.put("M>>", "101100");
 	}
 	
 	private static void initializeJumpTable()

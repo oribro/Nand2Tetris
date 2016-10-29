@@ -9,6 +9,8 @@ public class C_Instruction extends Instruction{
 	
 	private static final String C_INSTRUCTION_OP_CODE = "1";
 	private static final String UNUSED_BITS = "11";
+	private static final String SHIFT_OP_PADDING = "0000";
+	private static final int SHIFT_OP_LENGTH = 6;
 	private String dest;
 	private String comp;
 	private String jump;
@@ -64,7 +66,12 @@ public class C_Instruction extends Instruction{
 		String binDest = destTable.get(this.dest);
 		String binComp = compTable.get(this.comp);
 		String binJump = jumpTable.get(this.jump);
-		return C_INSTRUCTION_OP_CODE + UNUSED_BITS + binComp +
+		// Shift operations are handled differently
+		if (binComp.length() == SHIFT_OP_LENGTH)
+			return binComp + SHIFT_OP_PADDING + binDest + binJump;
+		// Rest of the operations
+		else
+			return C_INSTRUCTION_OP_CODE + UNUSED_BITS + binComp +
 				binDest + binJump;
 	}
 
