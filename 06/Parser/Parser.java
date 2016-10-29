@@ -1,16 +1,25 @@
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The parser module receives a line from the Main module and parse
+ * it to distinguish between A_Instruction, C_Instruction and lines to ignore.
+ * @author OriB
+ *
+ */
 public class Parser {
 	
 	private static final String WHITESPACE = "\\s*";
 	private static final String COMMENT_REGEX = "(//+.*)";
-	private static final String A_INSTRUCTION_REGEX = WHITESPACE + "@([0-9]+)" +
+	private static final String LABEL_REGEX = WHITESPACE + "\\((.+)\\)" +
+								WHITESPACE + COMMENT_REGEX + "?";
+	private static final String NON_SYMBOL_REGEX = "\\d+";
+	private static final String A_INSTRUCTION_REGEX = WHITESPACE + "@(\\S+)" +
 								WHITESPACE + COMMENT_REGEX + "?";
 	private static final String DEST_REGEX = "(M|D|MD|A|AM|AD|AMD)?";
 	private static final String COMP_REGEX = "(0|1|-1|D|A|!D|!A|-D|-A|D\\+1" +
 			"|A\\+1|D-1|A-1|D\\+A|D-A|A-D|D&A|D\\|A|M|!M|-M|M\\+1" +
-			"|M-1|D\\+M|D-M|M-D|D&M|D\\|M)";
+			"|M-1|D\\+M|D-M|M-D|D&M|D\\|M|D<<|D>>|A<<|A>>|M<<|M>>)";
 	private static final String JMP_REGEX = "(JGT|JEQ|JGE|JLT|JNE|JLE|JMP)?";
 	private static final String C_INSTRUCTION_REGEX =  WHITESPACE + DEST_REGEX +
 								WHITESPACE + "(=?)" + WHITESPACE + COMP_REGEX +
@@ -19,22 +28,34 @@ public class Parser {
 	
 	// Only deal with comments and instructions here.
 	// Empty lines are dealt in the main program.
-	public static Instruction parseLine(String line)
+	public static Instruction parseLine(String line, SymbolTable symbolTable)
 	{
-	
-		
-		//Comment handling
-		if (line.matches(WHITESPACE + COMMENT_REGEX))
-			return null;
-		
+					
 		// Handle A_Instruction
-		// Pattern for the C_Instruction
+		// Pattern for the A_Instruction
 		Pattern pattern = Pattern.compile(A_INSTRUCTION_REGEX);
 		Matcher matcher = pattern.matcher(line);
 		
 		if (matcher.matches())
 		{
 			String value = matcher.group(1);
+			// Check if value is a symbol
+			if (!value.matches(NON_SYMBOL_REGEX))
+			{
+				// Translate the symbol to it's numeric meaning.
+				if (symbolTable.contains(value))
+				{
+					int symbolAddress = symbolTable.getAddress(value);
+					return new A_Instruction(symbolAddress);
+				}
+				else
+				{
+					// The symbol is a variable, add it to the table.
+					symbolTable.addVariable(value);
+					return new A_Instruction(symbolTable.getAddress(value));
+				}
+			}
+			// The value is a number
 			return new A_Instruction(Integer.parseInt(value));
 		}
 		
@@ -69,6 +90,32 @@ public class Parser {
 		else
 			return null;
 			
+	}
+	
+	public static boolean isComment(String line)
+	{
+		//Comment handling
+		if (line.matches(WHITESPACE + COMMENT_REGEX))
+			return true;
+		return false;
+	}
+	
+	public static String parseLabel(String line)
+	{
+		// Handle L_Instruction
+		// Pattern for the L_Instruction
+		Pattern pattern = Pattern.compile(LABEL_REGEX);
+		Matcher matcher = pattern.matcher(line);
+		
+		if (matcher.matches())
+		{
+			String label = matcher.group(1);
+			return label;
+		}
+		return null;
+		/*// Not an L_Instruction
+		else
+			return null;*/
 	}
 	
 }
