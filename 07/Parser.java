@@ -16,7 +16,7 @@ public class Parser {
 	private static final String C_PUSH_REGEX = WHITESPACE + "push" + WHITESPACE 
 						+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE;
 	private static final String C_POP_REGEX = WHITESPACE + "pop" + WHITESPACE 
-			+ SEGMENT + WHITESPACE + "\\d+" + WHITESPACE;
+			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE;
 	
 	private BufferedReader reader;
 	private String currentLine;
@@ -28,6 +28,7 @@ public class Parser {
 	Parser(File inputFile) throws IOException
 	{
 		this.reader = new BufferedReader(new FileReader(inputFile));
+		advance();
 	}
 	
 	/**
@@ -35,7 +36,6 @@ public class Parser {
 	 * @throws IOException 
 	 */
 	public boolean hasMoreCommands() throws IOException{
-		advance();
 		if (currentLine == null)
 		{
 			reader.close();
@@ -69,7 +69,7 @@ public class Parser {
 	 *  Should be called only if hasMoreCommands() is true.
 		Initially there is no current command. 
 	 */
-	private void advance() throws IOException
+	public void advance() throws IOException
 	{
 		currentLine = reader.readLine();	
 	}
@@ -93,6 +93,14 @@ public class Parser {
 			String segment = matcher.group(1);
 			int value = Integer.parseInt(matcher.group(2));
 			return new C_Push(segment, value);
+		}
+		pattern = Pattern.compile(C_POP_REGEX);
+		matcher = pattern.matcher(currentLine);
+		if (matcher.matches())
+		{
+			String segment = matcher.group(1);
+			int value = Integer.parseInt(matcher.group(2));
+			return new C_Pop(segment, value);
 		}
 		return null;
 		

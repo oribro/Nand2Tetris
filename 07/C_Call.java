@@ -15,7 +15,7 @@ public class C_Call extends VMCommand{
 	}
 
 	@Override
-	public void translateToAsm(PrintWriter writer) {
+	public void translateToAsm(PrintWriter writer, Memory stack) {
 		// TODO Auto-generated method stub
 		
 	}
