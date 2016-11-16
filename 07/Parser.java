@@ -1,3 +1,5 @@
+package ex8;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -9,6 +11,7 @@ public class Parser {
 	
 	private static final String WHITESPACE = "\\s*";
 	private static final String COMMENT_REGEX = "(//+.*)";
+	private static final String NAME_REGEX = "[^\\d](\\w|\\_|\\d|\\.|\\:)+";
 	private static final String SEGMENT = "(argument|local|static|constant|"
 			+ "this|that|pointer|temp)";
 	private static final String C_ARITHMETIC_REGEX = WHITESPACE + "(add|sub|neg|eq|"
@@ -17,6 +20,7 @@ public class Parser {
 						+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE;
 	private static final String C_POP_REGEX = WHITESPACE + "pop" + WHITESPACE 
 			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE;
+	private static final String C_LABEL_REGEX = WHITESPACE + "label" + WHITESPACE + NAME_REGEX;
 	
 	private BufferedReader reader;
 	private String currentLine;
