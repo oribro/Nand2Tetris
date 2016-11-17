@@ -1,5 +1,6 @@
 import java.io.PrintWriter;
 
+
 public class C_Arithmetic extends VMCommand{
 	private String operation;
 	public C_Arithmetic(String operation){
@@ -28,7 +29,7 @@ public class C_Arithmetic extends VMCommand{
 			{
 				val1 = memory.pop();
 				val2 = memory.pop();
-				result = val1 + val2;
+				result = (short) (val1 + val2);
 				address -= 2;
 				break;
 			}
@@ -36,14 +37,14 @@ public class C_Arithmetic extends VMCommand{
 			{
 				val1 = memory.pop();
 				val2 = memory.pop();
-				result = val2 - val1;
+				result = (short) (val2 - val1);
 				address -= 2;
 				break;
 			}
 			case "neg":
 			{
 				val1 = memory.pop();
-				result = val1 * (-1);
+				result = (short) (val1 * (-1));
 				address -= 1;
 				break;
 			}

@@ -14,7 +14,6 @@ public class Memory {
 	private static final int POINTER_BASE = 3;
 	private static final int STATIC_BASE = 16;
 	private static final int HEAP_BASE = 2048;
-	private static final int HEAP_TOP = 16483;
 	private static final int SP_BASE = 256;
 	private static final int LOCAL_BASE = 300;
 	private static final int ARGUMENT_BASE = 400;
