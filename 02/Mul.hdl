@@ -10,7 +10,8 @@ CHIP Mul{
   
  
  PARTS:
-	// The only possibile digit mult results are either only zeroes or the input 'a' shifted 1 to 15 times
+	// The only possibile digit mult results are either only zeroes
+	// or the input 'a' shifted 1 to 15 times
 
 	ShiftLeft(in=a, out=a1);
 	ShiftLeft(in=a1, out=a2);
@@ -30,7 +31,7 @@ CHIP Mul{
 	
 	// Choose between the two possibilities described above
 
-	Mux16(a=false, b=a, sel=b[0], out=b0);
+	Mux16(a=false, b=a, sel=b[0], out=toaddzero);
 	Mux16(a=false, b=a1, sel=b[1], out=toaddone);
 	Mux16(a=false, b=a2, sel=b[2], out=toaddtwo);
 	Mux16(a=false, b=a3, sel=b[3], out=toaddthree);
@@ -49,19 +50,36 @@ CHIP Mul{
 	
 	//Add the results of the digit multiplication for the final output
 
-	Add16(a=toaddone, b=toaddtwo, out=tempone);
-	Add16(a=toaddthree, b=tempone, out=temptwo);
-	Add16(a=toaddfour, b=temptwo, out=tempthree);
-	Add16(a=toaddfive, b=tempthree, out=tempfour);
-	Add16(a=toaddsix, b=tempfour, out=tempfive);
-	Add16(a=toaddseven, b=tempfive, out=tempsix);
-	Add16(a=toaddeight, b=tempsix, out=tempseven);
-	Add16(a=toaddnine, b=tempseven, out=tempeight);
-	Add16(a=toaddten, b=tempeight, out=tempnine);
-	Add16(a=toaddeleven, b=tempnine, out=tempten);
-	Add16(a=toaddtwelve, b=tempten, out=tempeleven);
-	Add16(a=toaddthirteen, b=tempeleven, out=temptwelve);
-	Add16(a=toaddfourteen, b=temptwelve, out=tempthirteen);
-	Add16(a=toaddfifteen, b=tempthirteen, out=tempfourteen);
-	Add16(a=b0, b=tempfourteen, out=out);
+	Add16(a=toaddzero, b=toaddone, out=tempone);
+	Add16(a=toaddtwo, b=toaddthree, out=temptwo);
+	Add16(a=toaddfour, b=toaddfive, out=tempthree);
+	Add16(a=toaddsix, b=toaddseven, out=tempfour);
+	Add16(a=toaddeight, b=toaddnine, out=tempfive);
+	Add16(a=toaddten, b=toaddeleven, out=tempsix);
+	Add16(a=toaddtwelve, b=toaddthirteen, out=tempseven);
+	Add16(a=toaddfourteen, b=toaddfifteen, out=tempeight);
+	Add16(a=tempone, b=temptwo, out=temponeone);
+	Add16(a=tempthree, b=tempfour, out=temponetwo);
+	Add16(a=tempfive, b=tempsix, out=temponethree);
+	Add16(a=tempseven, b=tempeight, out=temponefour);
+	Add16(a=temponeone, b=temponetwo, out=firstresult);
+	Add16(a=temponethree, b=temponefour, out=secondresult);
+	Add16(a=firstresult, b=secondresult, out=outtemp, out[0..7]=rightside,
+	 out[8..15]=leftside);
+
+
+	// Check the sign of the output according to the inputs
+
+	Or8Way(in=rightside, out=isrightsidezero);
+	Or8Way(in=leftside, in[7]=false, out=isleftsidezero);
+	Or(a=isrightsidezero, b=isleftsidezero, out=isoutzero);
+
+	// If the output is not zero we decide according to a[15], b[15]
+	// otherwise out[15]=0
+	Xor(a=a[15], b=b[15], out=neg);
+
+	// If the output is non-negative it should have out[15]=0,
+	// otherwise out[15]=1
+	Mux(a=false, b=neg, sel=isoutzero ,out=isoutnegative);
+	Mux16(a=false, b=outtemp, b[15]=isoutnegative, sel=true, out=out);
 }
