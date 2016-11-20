@@ -1,5 +1,8 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 public class VMtranslator {
 	
@@ -21,6 +24,7 @@ public class VMtranslator {
 				continue;
 			if (reader.checkComment())
 				continue;
+			
 			VMCommand command = reader.getCommandType();
 			writer.writeCommand(command);
 			reader.advance();
@@ -33,7 +37,7 @@ public class VMtranslator {
 		try{
 			
 			File inputFile = new File(args[0]);
-			CodeWriter writer = null;
+			CodeWriter asmWriter = null;
 			if (inputFile.isFile())
 			{
 				String fileName = inputFile.getAbsolutePath();
@@ -46,9 +50,9 @@ public class VMtranslator {
 					outFileName = fileName.substring(0,
 							fileName.lastIndexOf(NAME_DELIMITER)) +
 							NAME_DELIMITER + OUT_SUFFIX;
-					writer = new CodeWriter(outFileName);
-					translate(inputFile, writer);
-					writer.close();
+					asmWriter = new CodeWriter(outFileName);
+					translate(inputFile, asmWriter);
+					asmWriter.close();
 				}
 			}
 			if (inputFile.isDirectory())
@@ -57,7 +61,8 @@ public class VMtranslator {
 				// translated to asm.
 				String outFileName = inputFile.getAbsolutePath() + "\\" +
 				inputFile.getName()	+ NAME_DELIMITER + OUT_SUFFIX;
-				writer = new CodeWriter(outFileName);
+				asmWriter = new CodeWriter(outFileName);
+				PrintWriter vmFileWriter =  new PrintWriter(inputFile.getAbsolutePath() +"\\"+ "AllVMFiles.vm");
 				File[] dirFiles = inputFile.listFiles();
 				for (File file : dirFiles)
 				{
@@ -65,10 +70,22 @@ public class VMtranslator {
 					String fileSuffix = fileName.substring(
 							fileName.lastIndexOf(NAME_DELIMITER)+1, fileName.length());
 					if (fileSuffix.equals(IN_SUFFIX))
-						writer = translate(file, writer);
+					{
+						BufferedReader reader = new BufferedReader(new FileReader(file));
+						String line= reader.readLine();
+						while (line != null)
+						{
+							vmFileWriter.println(line);
+							line = reader.readLine();
+						}
+						reader.close();
+					}
 				}
+				vmFileWriter.close();
+				File vmFile = new File(inputFile.getAbsolutePath() +"\\"+ "AllVMFiles.vm");
+				asmWriter = translate(vmFile, asmWriter);
 			}
-			writer.close();
+			asmWriter.close();
 		}catch(IOException e)
 		{
 			System.err.println("I/O ERROR");

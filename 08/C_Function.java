@@ -7,24 +7,24 @@
 public class C_Function extends VMCommand {
 
 	private String name;
-	private int localNum;
+	private int localsNum;
 	
 	C_Function(String name, int localNum)
 	{
 		this.name = name;
-		this.localNum = localNum;
+		this.localsNum = localNum;
 	}
 	
 	@Override
 	public String getFirstArg() {
 		// TODO Auto-generated method stub
-		return null;
+		return name;
 	}
 
 	@Override
 	public int getSecondArg() {
 		// TODO Auto-generated method stub
-		return 0;
+		return localsNum;
 	}
 
 	@Override

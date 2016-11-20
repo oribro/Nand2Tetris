@@ -1,17 +1,26 @@
 
 
 public class C_Call extends VMCommand{
-
+	
+	private String name;
+	private int argsNum;
+	
+	C_Call(String name, int argsNum, int VMFileLineNum)
+	{
+		this.name = name;
+		this.argsNum = argsNum;
+	}
+	
 	@Override
 	public String getFirstArg() {
 		// TODO Auto-generated method stub
-		return null;
+		return name;
 	}
 
 	@Override
 	public int getSecondArg() {
 		// TODO Auto-generated method stub
-		return 0;
+		return argsNum;
 	}
 
 	@Override

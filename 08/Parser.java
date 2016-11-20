@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,9 +23,19 @@ public class Parser {
 			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
 	private static final String C_FUNCTION_REGEX = WHITESPACE + "function" + WHITESPACE 
 			+ NAME_REGEX + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
+	private static final String C_CALL_REGEX = WHITESPACE + "call" + WHITESPACE 
+			+ NAME_REGEX + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
+	private static final String C_RETURN_REGEX = WHITESPACE + "return" + WHITESPACE 
+			 + COMMENT_REGEX + "?";
+	private static final String C_LABEL_REGEX = WHITESPACE + "label" + WHITESPACE + NAME_REGEX +WHITESPACE +
+            COMMENT_REGEX + "?",
+            C_GOTO_REGEX = WHITESPACE + "goto" + NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?",
+            C_IF_REGEX = WHITESPACE + "if-goto" + WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?";
 	
 	private BufferedReader reader;
 	private String currentLine;
+	private int lineNum = 0;
+	private Stack<String> functionNames = new Stack<String>();
 	
 	/**
 	 * Opens the input file/stream and gets ready to parse it.
@@ -33,6 +44,7 @@ public class Parser {
 	Parser(File inputFile) throws IOException
 	{
 		this.reader = new BufferedReader(new FileReader(inputFile));
+		functionNames.push("null");
 		advance();
 	}
 	
@@ -76,7 +88,8 @@ public class Parser {
 	 */
 	public void advance() throws IOException
 	{
-		currentLine = reader.readLine();	
+		lineNum++;
+		currentLine = reader.readLine();
 	}
 	
 	/**
@@ -116,9 +129,46 @@ public class Parser {
 		if (matcher.matches())
 		{
 			String funcName = matcher.group(1);
-			int localsNum = Integer.parseInt(matcher.group(2));
+			int localsNum = Integer.parseInt(matcher.group(3));
+			functionNames.push(funcName);
 			return new C_Function(funcName, localsNum);
 		}
+		pattern = Pattern.compile(C_CALL_REGEX);
+		matcher = pattern.matcher(currentLine);
+		if (matcher.matches())
+		{
+			String funcName = matcher.group(1);
+			int argsNum = Integer.parseInt(matcher.group(3));
+			return new C_Call(funcName, argsNum);
+		}
+		pattern = Pattern.compile(C_RETURN_REGEX);
+		matcher = pattern.matcher(currentLine);
+		if (matcher.matches())
+		{
+			functionNames.pop();
+			return new C_Return();
+		}
+		
+		pattern = Pattern.compile(C_LABEL_REGEX);
+		matcher = pattern.matcher(currentLine);
+		if (matcher.matches())
+		{
+			String labelName = matcher.group(1);
+			return new C_Label(functionNames.peek(), labelName);
+		}
+		pattern = Pattern.compile(C_GOTO_REGEX);
+		matcher = pattern.matcher(currentLine);
+		if (matcher.matches())
+		{
+			String labelName = matcher.group(1);
+            return new C_Goto(functionNames.peek(),labelName);
+		}
+        pattern = Pattern.compile(C_IF_REGEX);
+        matcher = pattern.matcher(currentLine);
+        if (matcher.matches()) {
+        	String labelName = matcher.group(1);
+            return new C_If(functionNames.peek(), labelName);
+        }
 		return null;
 		
 	}
