@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,8 +35,8 @@ public class Parser {
 	
 	private BufferedReader reader;
 	private String currentLine;
-	private Stack<String> functionNames = new Stack<String>();
 	private int lineNum = 0;
+	public static Stack<String> functionNames = new Stack<String>();
 	
 	/**
 	 * Opens the input file/stream and gets ready to parse it.

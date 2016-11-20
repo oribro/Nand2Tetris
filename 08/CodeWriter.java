@@ -5,6 +5,7 @@ public class CodeWriter {
 	private final static int POINTER_BASE = 3;
 	private final static int TEMP_BASE = 5;
 	private final static int STATIC_BASE = 16;
+	private static final String NAME_DELIMITER = ".";
 	
 	private PrintWriter writer;
 	// Variables to help us not to repeat jumps in the ASM file
@@ -241,7 +242,9 @@ public class CodeWriter {
 			}
 			case "static":
 			{
-				writer.println("@16");
+				String curFuncName = Parser.functionNames.peek();
+				writer.println("@" + curFuncName.substring(0,
+						curFuncName.lastIndexOf(NAME_DELIMITER)+1) + value);
 				pushTranslateCode(value + STATIC_BASE);
 				break;
 			}
@@ -295,8 +298,11 @@ public class CodeWriter {
 			}
 			case "static":
 			{
-				writer.println("@16");
-				popTranslateCode(value + STATIC_BASE);
+				String curFuncName = Parser.functionNames.peek();
+				writer.println("@" + curFuncName.substring(0,
+						curFuncName.lastIndexOf(NAME_DELIMITER)+1) + value);
+				writer.println("D=A");
+				setValueAtAddress();
 				break;
 			}
 		}
