@@ -1,10 +1,17 @@
 
 public class C_Return extends VMCommand{
 	
+	private String nameToRet;
+	
+	public C_Return(String nameToRet)
+	{
+		this.nameToRet = nameToRet;
+	}
+	
 	@Override
 	public String getFirstArg() {
 		// TODO Auto-generated method stub
-		return Integer.toString(UNSUPPORTED_OPERATION);
+		return nameToRet;
 	}
 
 	@Override

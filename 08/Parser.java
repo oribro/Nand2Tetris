@@ -34,8 +34,8 @@ public class Parser {
 	
 	private BufferedReader reader;
 	private String currentLine;
-	private int lineNum = 0;
 	private Stack<String> functionNames = new Stack<String>();
+	private int lineNum = 0;
 	
 	/**
 	 * Opens the input file/stream and gets ready to parse it.
@@ -139,14 +139,15 @@ public class Parser {
 		{
 			String funcName = matcher.group(1);
 			int argsNum = Integer.parseInt(matcher.group(3));
-			return new C_Call(funcName, argsNum);
+			return new C_Call(funcName, argsNum, lineNum);
 		}
 		pattern = Pattern.compile(C_RETURN_REGEX);
 		matcher = pattern.matcher(currentLine);
 		if (matcher.matches())
 		{
+			String nameToRet = functionNames.peek();
 			functionNames.pop();
-			return new C_Return();
+			return new C_Return(nameToRet);
 		}
 		
 		pattern = Pattern.compile(C_LABEL_REGEX);

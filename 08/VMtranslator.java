@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 
 public class VMtranslator {
 	
@@ -62,7 +64,9 @@ public class VMtranslator {
 				String outFileName = inputFile.getAbsolutePath() + "\\" +
 				inputFile.getName()	+ NAME_DELIMITER + OUT_SUFFIX;
 				asmWriter = new CodeWriter(outFileName);
-				PrintWriter vmFileWriter =  new PrintWriter(inputFile.getAbsolutePath() +"\\"+ "AllVMFiles.vm");
+				asmWriter.writeInit();
+				PrintWriter vmFileWriter =  new PrintWriter(
+						inputFile.getAbsolutePath() +"\\"+ "AllVMFiles.vm");
 				File[] dirFiles = inputFile.listFiles();
 				for (File file : dirFiles)
 				{
@@ -82,9 +86,13 @@ public class VMtranslator {
 					}
 				}
 				vmFileWriter.close();
-				File vmFile = new File(inputFile.getAbsolutePath() +"\\"+ "AllVMFiles.vm");
+				File vmFile = new File(inputFile.getAbsolutePath() +
+						"\\"+ "AllVMFiles.vm");
 				asmWriter = translate(vmFile, asmWriter);
+				Files.delete(FileSystems.getDefault().getPath(
+						vmFile.getAbsolutePath()));
 			}
+			
 			asmWriter.close();
 		}catch(IOException e)
 		{

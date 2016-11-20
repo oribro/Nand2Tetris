@@ -30,9 +30,11 @@ public class CodeWriter {
 	 */
 	public void writeInit()
 	{
+		writer.println("@256");
+		writer.println("D=A");
 		writer.println("@SP");
-		writer.println("256");
-		writeCall(new C_Call("Sys.init",0));
+		writer.println("M=D");
+		writeCall(new C_Call("Sys.init",0, 0));
 	}
 	
 	/**
@@ -302,9 +304,8 @@ public class CodeWriter {
 	
 	private void writeFunction(C_Function command)
 	{
-		/**
-		 * NEED TO DECLARE A LABEL (f) HERE
-		 */
+		// Label for function call
+		writeLabel(new C_Label(command.getFirstArg(), "BEGIN")); 
 		int argsNum = command.getSecondArg();
 		for (int i=1; i <= argsNum; i++)
 			writePush(new C_Push("constant", 0));
@@ -312,8 +313,13 @@ public class CodeWriter {
 	
 	private void writeCall(C_Call command)
 	{
+		//Use R14 for RET - return address temp variable
 		int argsNum = command.getSecondArg();
-		
+		writer.println("@"+command.getVMFileLineNum()); // Push return addr
+		writer.println("D=A");
+		writer.println("@R14");
+		writer.println("M=D");
+		pushUpdater();
 		writer.println("@LCL");  // Push calling function's relevant sections
 		writer.println("D=M");
 		pushUpdater();
@@ -326,19 +332,25 @@ public class CodeWriter {
 		writer.println("@THAT");
 		writer.println("D=M");
 		pushUpdater();
-		writer.println("@5");     // ARG = SP-5-argsNum
-		writer.println("D=A");
-		writer.println("@SP");
-		writer.println("D=M-D");
-		writer.println("@"+argsNum);
-		writer.println("D=D-A");
-		writer.println("@ARG");
-		writer.println("M=D");
-		writer.println("@SP");   // LCL = SP
-		writer.println("D=M");
-		writer.println("@LCL");
-		writer.println("M=D");
-		
+		if (command.getFirstArg() != "Sys.init")
+		{
+			writer.println("@5");     // ARG = SP-5-argsNum
+			writer.println("D=A");
+			writer.println("@SP");
+			writer.println("D=M-D");
+			writer.println("@"+argsNum);
+			writer.println("D=D-A");
+			writer.println("@ARG");
+			writer.println("M=D");
+			writer.println("@SP");   // LCL = SP
+			writer.println("D=M");
+			writer.println("@LCL");
+			writer.println("M=D");
+		}
+		// Call the function
+		writeGoto(new C_Goto(command.getFirstArg(), "BEGIN"));
+		// Declare label to return to.
+		writeLabel(new C_Label(command.getFirstArg(), "RET")); 
 	}
 	
 	private void writeReturn(C_Return command)
@@ -370,11 +382,8 @@ public class CodeWriter {
 			writer.println("@R"+i);
 			writer.println("M=D");
 		}
-		
-		/**
-		 *  NEED TO ADD "goto RET" HERE
-		 */
-		
+		// Goto return address
+		writeGoto(new C_Goto(command.getFirstArg(), "RET"));
 	}
 	
 	private void writeLabel(C_Label command)

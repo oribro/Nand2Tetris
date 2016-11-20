@@ -4,11 +4,13 @@ public class C_Call extends VMCommand{
 	
 	private String name;
 	private int argsNum;
+	private int VMFileLineNum;
 	
 	C_Call(String name, int argsNum, int VMFileLineNum)
 	{
 		this.name = name;
 		this.argsNum = argsNum;
+		this.VMFileLineNum = VMFileLineNum;
 	}
 	
 	@Override
@@ -28,6 +30,10 @@ public class C_Call extends VMCommand{
 		// TODO Auto-generated method stub
 		return "call";
 	}
-
+	
+	public int getVMFileLineNum() {
+		// TODO Auto-generated method stub
+		return this.VMFileLineNum;
+	}
 
 }
