@@ -1,31 +1,31 @@
+package ex8;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Parser {
 	
-	private static final int MAX_MEMORY_VALUE = 32767;
 	private static final String WHITESPACE = "\\s*";
-	private static final String COMMENT_REGEX = "(//+.*)";
+	private static final String COMMENT_REGEX = "(\\/\\/+.*)?";
+	private static final String NAME_REGEX = "([^\\d](\\w|\\_|\\d|\\.|\\:)+)";
 	private static final String SEGMENT = "(argument|local|static|constant|"
 			+ "this|that|pointer|temp)";
-	private static final String NAME_REGEX = "([^\\d](\\w|\\_|\\d|\\.|\\:)+)";
 	private static final String C_ARITHMETIC_REGEX = WHITESPACE + "(add|sub|neg|eq|"
-			+ "gt|lt|and|or|not)" + WHITESPACE + COMMENT_REGEX + "?";
+			+ "gt|lt|and|or|not)" + WHITESPACE + COMMENT_REGEX;
 	private static final String C_PUSH_REGEX = WHITESPACE + "push" + WHITESPACE 
-						+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE +
-						COMMENT_REGEX + "?";
+						+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX;
 	private static final String C_POP_REGEX = WHITESPACE + "pop" + WHITESPACE 
-			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_FUNCTION_REGEX = WHITESPACE + "function" + WHITESPACE 
-			+ NAME_REGEX + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_CALL_REGEX = WHITESPACE + "call" + WHITESPACE 
-			+ NAME_REGEX + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_RETURN_REGEX = WHITESPACE + "return" + WHITESPACE 
-			 + COMMENT_REGEX + "?";
+			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX;
+	private static final String C_LABEL_REGEX = WHITESPACE + "label" + WHITESPACE + NAME_REGEX +WHITESPACE +
+            COMMENT_REGEX,
+            C_GOTO_REGEX = WHITESPACE + "goto" + NAME_REGEX + WHITESPACE+ COMMENT_REGEX,
+            C_IF_REGEX = WHITESPACE + "if-goto" + WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX;
 	
 	private BufferedReader reader;
 	private String currentLine;
@@ -86,7 +86,7 @@ public class Parser {
 	/**
 	 * @return Returns the type of the current VM command. 
 	 */
-	public VMCommand getCommandType() throws IllegalArgumentException
+	public VMCommand getCommandType()
 	{
 		Pattern pattern = Pattern.compile(C_ARITHMETIC_REGEX);
 		Matcher matcher = pattern.matcher(currentLine);
@@ -101,8 +101,6 @@ public class Parser {
 		{
 			String segment = matcher.group(1);
 			int value = Integer.parseInt(matcher.group(2));
-			if (value >= MAX_MEMORY_VALUE+1)
-				throw new IllegalArgumentException();
 			return new C_Push(segment, value);
 		}
 		pattern = Pattern.compile(C_POP_REGEX);
@@ -111,34 +109,42 @@ public class Parser {
 		{
 			String segment = matcher.group(1);
 			int value = Integer.parseInt(matcher.group(2));
-			if (value >= MAX_MEMORY_VALUE+1)
-				throw new IllegalArgumentException();
 			return new C_Pop(segment, value);
 		}
-		pattern = Pattern.compile(C_FUNCTION_REGEX);
+		pattern = Pattern.compile(C_LABEL_REGEX);
 		matcher = pattern.matcher(currentLine);
 		if (matcher.matches())
 		{
-			String funcName = matcher.group(1);
-			int localsNum = Integer.parseInt(matcher.group(3));
-			return new C_Function(funcName, localsNum);
+			String labelName = matcher.group(1);
+			return new C_Label(labelName);
 		}
-		pattern = Pattern.compile(C_CALL_REGEX);
+		pattern = Pattern.compile(C_GOTO_REGEX);
 		matcher = pattern.matcher(currentLine);
 		if (matcher.matches())
 		{
-			String funcName = matcher.group(1);
-			int argsNum = Integer.parseInt(matcher.group(3));
-			return new C_Call(funcName, argsNum);
+            return new C_Goto(matcher.group(1));
 		}
-		pattern = Pattern.compile(C_RETURN_REGEX);
-		matcher = pattern.matcher(currentLine);
-		if (matcher.matches())
-		{
-			return new C_Return();
-		}
+        pattern = Pattern.compile(C_IF_REGEX);
+        matcher = pattern.matcher(currentLine);
+        if (matcher.matches()) {
+            return new C_If(matcher.group(1));
+        }
 		return null;
-		
 	}
 	
+	/**
+	 * @return Returns the first argument of the current command.
+	 */
+	public String getArg1()
+	{
+		return this.getCommandType().getFirstArg();
+	}
+	/**
+	 * @return Returns the second argument of the current command.
+	 */
+	public int getArg2()
+	{
+		return this.getCommandType().getSecondArg();
+	}
+
 }
