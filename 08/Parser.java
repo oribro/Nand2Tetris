@@ -35,7 +35,7 @@ public class Parser {
 	
 	private BufferedReader reader;
 	private String currentLine;
-	private int lineNum = 0;
+	private int lineNum = 1;
 	public static Stack<String> functionNames = new Stack<String>();
 	
 	/**

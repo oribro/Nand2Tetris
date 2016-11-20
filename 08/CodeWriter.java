@@ -245,7 +245,8 @@ public class CodeWriter {
 				String curFuncName = Parser.functionNames.peek();
 				writer.println("@" + curFuncName.substring(0,
 						curFuncName.lastIndexOf(NAME_DELIMITER)+1) + value);
-				pushTranslateCode(value + STATIC_BASE);
+				writer.println("D=M");
+				pushUpdater();
 				break;
 			}
 		}
