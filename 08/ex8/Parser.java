@@ -32,7 +32,11 @@ public class Parser {
 	private static final String C_LABEL_REGEX = WHITESPACE + "label" + WHITESPACE + NAME_REGEX +WHITESPACE +
 			COMMENT_REGEX + "?",
 			C_GOTO_REGEX = WHITESPACE + "goto" +WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?",
-			C_IF_REGEX = WHITESPACE + "if-goto" + WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?";
+			C_IF_REGEX = WHITESPACE + "if-goto" + WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?",
+			C_LABEL_NEW = WHITESPACE + "label" + WHITESPACE + NAME_REGEX + "$" + NAME_REGEX + WHITESPACE +
+					COMMENT_REGEX + "?", C_GOTO_NEW = WHITESPACE + "goto" + WHITESPACE + NAME_REGEX + "$" + NAME_REGEX + WHITESPACE +
+			COMMENT_REGEX + "?", C_IF_NEW = WHITESPACE + "if-goto" + WHITESPACE + NAME_REGEX + "$" + NAME_REGEX + WHITESPACE +
+			COMMENT_REGEX + "?";
 
 	private BufferedReader reader;
 	private String currentLine;
@@ -193,24 +197,24 @@ public class Parser {
 			return new C_Return(nameToRet);
 		}
 
-		pattern = Pattern.compile(C_LABEL_REGEX);
-		matcher = pattern.matcher(currentLine);
-		if (matcher.matches())
+//		pattern = Pattern.compile(C_LABEL_NEW);
+//		matcher = pattern.matcher(currentLine);
+		if (currentLine.startsWith("label"))
 		{
-			String labelName = matcher.group(1);
+			String labelName = currentLine.split("\\s+")[1];
 			return new C_Label(labelName);
 		}
-		pattern = Pattern.compile(C_GOTO_REGEX);
-		matcher = pattern.matcher(currentLine);
-		if (matcher.matches())
+//		pattern = Pattern.compile(C_GOTO_NEW);
+//		matcher = pattern.matcher(currentLine);
+		if (currentLine.startsWith("goto"))
 		{
-			String labelName = matcher.group(1);
+			String labelName = currentLine.split("\\s+")[1];
 			return new C_Goto(labelName);
 		}
-		pattern = Pattern.compile(C_IF_REGEX);
-		matcher = pattern.matcher(currentLine);
-		if (matcher.matches()) {
-			String labelName = matcher.group(1);
+//		pattern = Pattern.compile(C_IF_NEW);
+//		matcher = pattern.matcher(currentLine);
+		if (currentLine.startsWith("if-goto")) {
+			String labelName = currentLine.split("\\s+")[1];
 			return new C_If(labelName);
 		}
 		return null;

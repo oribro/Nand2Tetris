@@ -75,18 +75,18 @@ public class VMtranslator {
 					String fileName = file.getName();
 					String fileSuffix = fileName.substring(
 							fileName.lastIndexOf(NAME_DELIMITER)+1, fileName.length());
-					if (fileSuffix.equals(IN_SUFFIX) && !fileName.equals("AllVMFiles.vm"))
+					if (!fileName.equals("AllVMFiles.vm") && fileSuffix.equals(IN_SUFFIX))
 					{
 						Parser reader = new Parser(file);
 						reader.vmFilesProcessing(vmFileWriter);
 						reader.close();
 					}
 				}
-
 				File vmFile = new File(inputFile.getAbsolutePath() +
 						"\\"+ "AllVMFiles.vm");
-				asmWriter = translate(vmFile, asmWriter);
 				vmFileWriter.close();
+				asmWriter = translate(vmFile, asmWriter);
+
 				//Files.delete(FileSystems.getDefault().getPath(
 						//vmFile.getAbsolutePath()));
 
