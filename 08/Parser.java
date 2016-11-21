@@ -1,43 +1,44 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Parser {
-	
+
 	private static final int MAX_MEMORY_VALUE = 32767;
 	private static final String WHITESPACE = "\\s*";
 	private static final String COMMENT_REGEX = "(//+.*)";
 	private static final String SEGMENT = "(argument|local|static|constant|"
 			+ "this|that|pointer|temp)";
-	private static final String NAME_REGEX = "([^\\d](\\w|\\_|\\d|\\.|\\:)+)";
+	private static final String NAME_REGEX = "([^\\d](\\w|\\.|\\:)+)";
 	private static final String C_ARITHMETIC_REGEX = WHITESPACE + "(add|sub|neg|eq|"
 			+ "gt|lt|and|or|not)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_PUSH_REGEX = WHITESPACE + "push" + WHITESPACE 
-						+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE +
-						COMMENT_REGEX + "?";
-	private static final String C_POP_REGEX = WHITESPACE + "pop" + WHITESPACE 
+	private static final String C_PUSH_REGEX = WHITESPACE + "push" + WHITESPACE
+			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE +
+			COMMENT_REGEX + "?";
+	private static final String C_POP_REGEX = WHITESPACE + "pop" + WHITESPACE
 			+ SEGMENT + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_FUNCTION_REGEX = WHITESPACE + "function" + WHITESPACE 
+	private static final String C_FUNCTION_REGEX = WHITESPACE + "function" + WHITESPACE
 			+ NAME_REGEX + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_CALL_REGEX = WHITESPACE + "call" + WHITESPACE 
+	private static final String C_CALL_REGEX = WHITESPACE + "call" + WHITESPACE
 			+ NAME_REGEX + WHITESPACE + "(\\d+)" + WHITESPACE + COMMENT_REGEX + "?";
-	private static final String C_RETURN_REGEX = WHITESPACE + "return" + WHITESPACE 
-			 + COMMENT_REGEX + "?";
+	private static final String C_RETURN_REGEX = WHITESPACE + "return" + WHITESPACE
+			+ COMMENT_REGEX + "?";
 	private static final String C_LABEL_REGEX = WHITESPACE + "label" + WHITESPACE + NAME_REGEX +WHITESPACE +
-            COMMENT_REGEX + "?",
-            C_GOTO_REGEX = WHITESPACE + "goto" + NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?",
-            C_IF_REGEX = WHITESPACE + "if-goto" + WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?";
-	
+			COMMENT_REGEX + "?",
+			C_GOTO_REGEX = WHITESPACE + "goto" +WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?",
+			C_IF_REGEX = WHITESPACE + "if-goto" + WHITESPACE+ NAME_REGEX + WHITESPACE+ COMMENT_REGEX+"?",
+			C_LABEL_NEW = WHITESPACE + "label" + WHITESPACE + NAME_REGEX + "$" + NAME_REGEX + WHITESPACE +
+					COMMENT_REGEX + "?", C_GOTO_NEW = WHITESPACE + "goto" + WHITESPACE + NAME_REGEX + "$" + NAME_REGEX + WHITESPACE +
+			COMMENT_REGEX + "?", C_IF_NEW = WHITESPACE + "if-goto" + WHITESPACE + NAME_REGEX + "$" + NAME_REGEX + WHITESPACE +
+			COMMENT_REGEX + "?";
+
 	private BufferedReader reader;
 	private String currentLine;
-	private int lineNum = 1;
-	public static Stack<String> functionNames = new Stack<String>();
-	
+	private int lineNum = 0;
+	private Stack<String> functionNames;
+
 	/**
 	 * Opens the input file/stream and gets ready to parse it.
 	 * @param inputFile
@@ -45,13 +46,14 @@ public class Parser {
 	Parser(File inputFile) throws IOException
 	{
 		this.reader = new BufferedReader(new FileReader(inputFile));
+		functionNames = new Stack<String>();
 		functionNames.push("null");
 		advance();
 	}
-	
+
 	/**
-	 * Are there more commands in the input? 
-	 * @throws IOException 
+	 * Are there more commands in the input?
+	 * @throws IOException
 	 */
 	public boolean hasMoreCommands() throws IOException{
 		if (currentLine == null)
@@ -61,7 +63,41 @@ public class Parser {
 		}
 		return true;
 	}
-	
+	public void vmFilesProcessing(PrintWriter writer) throws IOException{
+		String funcName = "null";
+		while (hasMoreCommands()) {
+			Pattern pattern = Pattern.compile(C_LABEL_REGEX);
+			Matcher matcher = pattern.matcher(currentLine);
+			if (matcher.matches()) {
+				writer.println("label " + funcName + "$" + matcher.group(1));
+				advance();
+				continue;
+			}
+			pattern = Pattern.compile(C_GOTO_REGEX);
+			matcher = pattern.matcher(currentLine);
+			if (matcher.matches())
+			{
+				writer.println("goto " + funcName + "$" + matcher.group(1));
+				advance();
+				continue;
+			}
+			pattern = Pattern.compile(C_IF_REGEX);
+			matcher = pattern.matcher(currentLine);
+			if (matcher.matches()) {
+				writer.println("if-goto " + funcName + "$" + matcher.group(1));
+				advance();
+				continue;
+			}
+			pattern = Pattern.compile(C_FUNCTION_REGEX);
+			matcher = pattern.matcher(currentLine);
+			if (matcher.matches()) {
+				funcName = matcher.group(1);
+			}
+			writer.println(currentLine);
+			advance();
+		}
+	}
+
 	// Handle whitespaces: empty lines, comments, bad lines.
 	public boolean checkEmpty() throws IOException
 	{
@@ -72,7 +108,7 @@ public class Parser {
 		}
 		return false;
 	}
-	
+
 	public boolean checkComment() throws IOException
 	{
 		if (currentLine.matches(WHITESPACE + COMMENT_REGEX))
@@ -82,19 +118,25 @@ public class Parser {
 		}
 		return false;
 	}
+	public void close() throws IOException {
+		reader.close();
+	}
 	/**
 	 *  Reads the next command from the input and makes it the current command.
 	 *  Should be called only if hasMoreCommands() is true.
-		Initially there is no current command. 
+	 Initially there is no current command.
 	 */
 	public void advance() throws IOException
 	{
 		lineNum++;
 		currentLine = reader.readLine();
 	}
-	
+	public String getCurrFunctionName() {
+		return functionNames.peek();
+	}
+
 	/**
-	 * @return Returns the type of the current VM command. 
+	 * @return Returns the type of the current VM command.
 	 */
 	public VMCommand getCommandType() throws IllegalArgumentException
 	{
@@ -150,29 +192,29 @@ public class Parser {
 			functionNames.pop();
 			return new C_Return(nameToRet);
 		}
-		
-		pattern = Pattern.compile(C_LABEL_REGEX);
-		matcher = pattern.matcher(currentLine);
-		if (matcher.matches())
+
+//		pattern = Pattern.compile(C_LABEL_NEW);
+//		matcher = pattern.matcher(currentLine);
+		if (currentLine.startsWith("label"))
 		{
-			String labelName = matcher.group(1);
-			return new C_Label(functionNames.peek(), labelName);
+			String labelName = currentLine.split("\\s+")[1];
+			return new C_Label(labelName);
 		}
-		pattern = Pattern.compile(C_GOTO_REGEX);
-		matcher = pattern.matcher(currentLine);
-		if (matcher.matches())
+//		pattern = Pattern.compile(C_GOTO_NEW);
+//		matcher = pattern.matcher(currentLine);
+		if (currentLine.startsWith("goto"))
 		{
-			String labelName = matcher.group(1);
-            return new C_Goto(functionNames.peek(),labelName);
+			String labelName = currentLine.split("\\s+")[1];
+			return new C_Goto(labelName);
 		}
-        pattern = Pattern.compile(C_IF_REGEX);
-        matcher = pattern.matcher(currentLine);
-        if (matcher.matches()) {
-        	String labelName = matcher.group(1);
-            return new C_If(functionNames.peek(), labelName);
-        }
+//		pattern = Pattern.compile(C_IF_NEW);
+//		matcher = pattern.matcher(currentLine);
+		if (currentLine.startsWith("if-goto")) {
+			String labelName = currentLine.split("\\s+")[1];
+			return new C_If(labelName);
+		}
 		return null;
-		
+
 	}
-	
+
 }

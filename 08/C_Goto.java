@@ -6,8 +6,8 @@
 public class C_Goto extends C_Label{
     protected String gotoLabel;
 
-    public C_Goto(String funcName, String labelName){
-        super(funcName, labelName);
+    public C_Goto(String labelName){
+        super(labelName);
     }
 
   
