@@ -1,0 +1,90 @@
+
+/** Implements a snake to be shown on the screen. */
+/** The snake is made of square objects*/
+class Snake {
+
+	field Array body; // The snake's body. The head is at the start.
+	field int length; // The snake's length
+	
+	constructor Snake new(Array sBody, int sLength){
+		let body = sBody;
+		let length = sLength;
+		return this;
+	}
+	
+	/** Disposes this snake. */
+	method void dispose() {
+		var int i;
+		let i = 0;
+		while (i < length){
+			do Memory.deAlloc(body);
+			let i = i + 1;
+		}
+		do Memory.deAlloc(this);
+		return;
+	}
+  	
+  	/** Moves the snake up by 2 pixels. */
+	method void moveUp() {
+	      var int i;
+	      var Square elem;
+	      let i = 0;
+	      while (i < length){
+	           let elem = body[i];
+	           do elem.moveUp();
+	      	   let i = i + 1;
+	      }
+	      return;
+	}
+	
+	
+	/** Moves the square down by 2 pixels. */
+	method void moveDown() {
+	       var int i;
+	       var Square elem;
+	       let i = 0;
+	       while (i < length){
+	      	   let elem = body[i];
+	      	   do elem.moveDown();
+	      	   let i = i + 1;
+	       }
+	      return;
+	}
+	
+	
+	/** Moves the square left by 2 pixels. */
+	method void moveLeft() {
+	       var int i;
+	       var Square elem;
+	       let i = 0;
+	       while (i < length){
+	       	   let elem = body[i];
+	      	   do elem.moveLeft();
+	      	   let i = i + 1;
+	      }
+	      return;
+	}
+	
+	
+	/** Moves the square right by 2 pixels. */
+	method void moveRight() {
+	       var int i;
+	       var Square elem;
+	       let i = 0;
+	       while (i < length){
+	           let elem = body[i];
+	      	   do elem.moveRight();
+	      	   let i = i + 1;
+	      }
+	      return;
+   	}
+   	
+   	method Array getHeadPos(){
+   		var Array headPos;
+   		var Square head;
+   		let head = body[0];
+   		let headPos = head.getPosition();
+   		return headPos;
+   	}
+   	
+}

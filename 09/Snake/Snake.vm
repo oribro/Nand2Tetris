@@ -1,0 +1,161 @@
+function Snake.new 0
+push constant 2
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push pointer 0
+return
+function Snake.dispose 1
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 1
+lt
+not
+if-goto WHILE_END0
+push this 0
+call Memory.deAlloc 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Snake.moveUp 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push local 1
+call Square.moveUp 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Snake.moveDown 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push local 1
+call Square.moveDown 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Snake.moveLeft 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push local 1
+call Square.moveLeft 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Snake.moveRight 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push local 1
+call Square.moveRight 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Snake.getHeadPos 2
+push argument 0
+pop pointer 0
+push constant 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push local 1
+call Square.getPosition 1
+pop local 0
+push local 0
+return

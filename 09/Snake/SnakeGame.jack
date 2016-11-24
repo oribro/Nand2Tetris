@@ -1,0 +1,177 @@
+
+/** Defines the snake game*/
+
+class SnakeGame{
+	field int score;
+	field Snake snake;
+	field Food food;
+	field int direction; // the snake's current direction: 
+                        // 0=none, 1=up, 2=down, 3=left, 4=right
+        
+        /** Constructs a new Snake Game. */
+        constructor SnakeGame new(){
+        	let score = 0;
+        	do spawnSnake();
+       		do spawnFood();
+        	return this;
+        }
+        
+        /** Disposes this game. */
+	method void dispose() {
+	   	do snake.dispose();
+	   	do food.dispose();
+	   	do Memory.deAlloc(this);
+	   	return;
+  	}
+  	
+  	method void spawnSnake(){
+  		var Array body;
+		var int xPos;   // Starting position of the snake
+        	var int yPos; 
+        	let body = Array.new(1);
+		let yPos = Random.between(0, 490); // position in columns
+        	let xPos = Random.between(0, 235); // position in rows
+        	let body[0] = Square.new(yPos, xPos, 10);
+        	let snake = Snake.new(body, 1);
+        	let direction = 0;
+        	return;
+       	}
+       	
+       	method void spawnFood(){
+       		var int xPos;   // Starting position of the food
+        	var int yPos; 
+       		let yPos = Random.between(10, 490); // position in columns
+		let xPos = Random.between(10, 235); // position in rows
+        	let food = Food.new(yPos, xPos);
+        	return;
+       	}
+       	
+       	method void eat(){
+     		do food.erase();
+     		do spawnFood();
+       		return;
+       	}
+       	
+       	method void isFoodNear(){
+       		var int diff;
+       		var Array foodPos;
+       		var Array headPos;
+       		let foodPos = food.getPosition();
+       		let headPos = snake.getHeadPos();
+       		let diff = foodPos[0] - headPos[0];
+       		if (diff < 10){
+			if (diff > -10){
+				let diff = foodPos[1] - headPos[1];
+				if (diff < 10){
+				    if (diff > -10){
+				       	do eat();
+				       	let score = score + 1;
+				    }
+				} 
+			}    
+       		}  
+       		return;
+       	}
+       	
+       	method boolean isGameOver(){
+       		var Array headPos;
+       		let headPos = snake.getHeadPos();
+       		if (headPos[1] = 0){
+       			if (direction = 1){
+       				do Output.moveCursor(14, 20);
+       				do Output.printString("Game Over :(");
+				do Output.moveCursor(16, 20);
+				do Output.printString("Made by Orib");
+       				return true;
+       			}
+       		}
+       		if (headPos[1] > 243){
+       			if (direction = 2){
+       				do Output.moveCursor(14, 20);
+				do Output.printString("Game Over :(");
+				do Output.moveCursor(16, 20);
+				do Output.printString("Made by Orib");
+       				return true;
+       			}
+       		}
+       		if (headPos[0] < 2){
+       			if (direction = 3){
+       			        do Output.moveCursor(14, 20);
+			 	do Output.printString("Game Over :(");
+			 	do Output.moveCursor(16, 20);
+				do Output.printString("Made by Orib");
+       				return true;
+       			}
+       		}
+       		if (headPos[0] > 500){
+       			if (direction = 4){
+       				do Output.moveCursor(14, 20);
+				do Output.printString("Game Over :(");
+				do Output.moveCursor(16, 20);
+				do Output.printString("Made by Orib");
+       				return true;
+       			}
+       		}
+       				
+       		return false;
+       	}
+       	
+  	/** Runs the game */
+  	method void run(){
+	   var char key;  // the key currently pressed by the user
+	   var boolean exit;
+	   
+	 
+	   let exit = false;
+	   
+	      
+	   while (~exit) { 	     
+ 	      do Output.moveCursor(0,0);
+	      do Output.printString("Score:");
+		     
+		     		       
+	      // waits for a key to be pressed
+	      while (key = 0) {
+	         let key = Keyboard.keyPressed();
+	         if (isGameOver() = true)
+	         {
+	         	let exit = true;
+	         	return;
+	         }
+	         do isFoodNear();
+	         do moveSnake();
+	      }
+	      if (key = 140)  { let exit = true; }     // escape key
+	      if (key = 131) { let direction = 1; }   // up arrow
+	      if (key = 133) { let direction = 2; }   // down arrow
+	      if (key = 130) { let direction = 3; }   // left arrow
+	      if (key = 132) { let direction = 4; }   // right arrow
+	
+	      // waits for the key to be released
+	      while (~(key = 0)) {
+	         let key = Keyboard.keyPressed();
+	          if (isGameOver() = true)  {
+			let exit = true;
+		 	return;
+	         }
+	         do isFoodNear();
+	         do moveSnake();
+	      }
+	  } // while
+	  return;
+	 } 
+	  /** Moves the square in the current direction. */
+	  method void moveSnake() {
+	     if (direction = 1) { do snake.moveUp(); }
+	     if (direction = 2) { do snake.moveDown(); }
+	     if (direction = 3) { do snake.moveLeft(); }
+	     if (direction = 4) { do snake.moveRight(); }
+	     do Sys.wait(2);  // delays the next movement
+	     return;
+   	 }
+   	 
+}
+  	
+  	
+  	
+        
