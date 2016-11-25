@@ -11,7 +11,8 @@ class SnakeGame{
         /** Constructs a new Snake Game. */
         constructor SnakeGame new(){
         	let score = 0;
-        	do spawnSnake();
+        	let direction = 0;
+        	do spawnSnake(1, 100, 100);
        		do spawnFood();
         	return this;
         }
@@ -24,16 +25,49 @@ class SnakeGame{
 	   	return;
   	}
   	
-  	method void spawnSnake(){
+  	method void spawnSnake(int length, int yPos, int xPos){
   		var Array body;
-		var int xPos;   // Starting position of the snake
-        	var int yPos; 
-        	let body = Array.new(1);
-		let yPos = Random.between(0, 490); // position in columns
-        	let xPos = Random.between(0, 235); // position in rows
+  		var Array tailPos;
+  		var int i;
+        	let body = Array.new(length);
+ 
         	let body[0] = Square.new(yPos, xPos, 10);
-        	let snake = Snake.new(body, 1);
-        	let direction = 0;
+        	
+        	if (direction = 1){
+		        let i = 1;
+		        while (i < length){
+		        	let body[i] = Square.new(yPos, xPos+10, 10);
+		        	let xPos = xPos + 10;
+		        	let i = i + 1;
+		        }
+        	}
+        	if (direction = 2){
+		        let i = 1;
+		        while (i < length){
+		        	let body[i] = Square.new(yPos, xPos-10, 10);
+		        	let xPos = xPos - 10;
+		        	let i = i + 1;
+		        }
+        	}
+       		if (direction = 3){
+		        let i = 1;
+		        while (i < length){
+		        	let body[i] = Square.new(yPos+10, xPos, 10);
+		        	let yPos = yPos + 10;
+		        	let i = i + 1;
+		        }
+        	}
+        	
+        	if (direction = 4){
+        		let i = 1;
+        		while (i < length){
+        			let body[i] = Square.new(yPos-10, xPos, 10);
+        			let yPos = yPos - 10;
+        			let i = i + 1;
+        		}
+        	}
+        	
+        	let snake = Snake.new(body, length, direction);
         	return;
        	}
        	
@@ -47,8 +81,16 @@ class SnakeGame{
        	}
        	
        	method void eat(){
+       		//var Array tailPos;
+		var int length;
+		var Array foodPos;
+		let length = snake.getLength();
+		let foodPos = food.getPosition();
      		do food.erase();
      		do spawnFood();
+     		//let tailPos = snake.getTailPos();
+     		do snake.dispose();
+     		do spawnSnake(length+1, foodPos[0], foodPos[1]);
        		return;
        	}
        	
@@ -66,6 +108,8 @@ class SnakeGame{
 				    if (diff > -10){
 				       	do eat();
 				       	let score = score + 1;
+				       	do Output.moveCursor(0,7);
+	      				do Output.printInt(score);
 				    }
 				} 
 			}    
@@ -123,12 +167,11 @@ class SnakeGame{
 	   
 	 
 	   let exit = false;
-	   
+	   do Output.moveCursor(0,0);
+	   do Output.printString("Score: ");
+	   do Output.printInt(score);
 	      
-	   while (~exit) { 	     
- 	      do Output.moveCursor(0,0);
-	      do Output.printString("Score:");
-		     
+	   while (~exit) { 	          
 		     		       
 	      // waits for a key to be pressed
 	      while (key = 0) {
@@ -156,6 +199,7 @@ class SnakeGame{
 	         }
 	         do isFoodNear();
 	         do moveSnake();
+	         do Sys.wait(30);
 	      }
 	  } // while
 	  return;
@@ -166,7 +210,7 @@ class SnakeGame{
 	     if (direction = 2) { do snake.moveDown(); }
 	     if (direction = 3) { do snake.moveLeft(); }
 	     if (direction = 4) { do snake.moveRight(); }
-	     do Sys.wait(2);  // delays the next movement
+	     //do Sys.wait(4);  // delays the next movement
 	     return;
    	 }
    	 

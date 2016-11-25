@@ -14,6 +14,7 @@ class Food {
 
    /** Disposes this food. */
    method void dispose() {
+      do erase();
       do Memory.deAlloc(this);
       return;
    }
@@ -31,7 +32,6 @@ class Food {
    method void erase() {
       do Screen.setColor(false);
       do Screen.drawCircle(x, y, 5);
-      do dispose();
       return;
    }
    
