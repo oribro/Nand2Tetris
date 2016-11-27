@@ -62,11 +62,11 @@ public class VMtranslator {
 			{
 				// Create an asm file for the directory. All vm files will be in it,
 				// translated to asm.
-				String outFileName = inputFile.getAbsolutePath() + "\\" +
+				String outFileName = inputFile.getAbsolutePath() + "/" +
 						inputFile.getName()	+ NAME_DELIMITER + OUT_SUFFIX;
 				asmWriter = new CodeWriter(outFileName);
 				PrintWriter vmFileWriter =  new PrintWriter(
-						inputFile.getAbsolutePath() +"\\"+ "AllVMFiles.vm");
+						inputFile.getAbsolutePath() +"/"+ "AllVMFiles.vm");
 				File[] dirFiles = inputFile.listFiles();
 				for (File file : dirFiles)
 				{
@@ -84,12 +84,18 @@ public class VMtranslator {
 					}
 				}
 				File vmFile = new File(inputFile.getAbsolutePath() +
-						"\\"+ "AllVMFiles.vm");
+						"/"+ "AllVMFiles.vm");
 				vmFileWriter.close();
 				asmWriter = translate(vmFile, asmWriter);
 
-				//Files.delete(FileSystems.getDefault().getPath(
-						//vmFile.getAbsolutePath()));
+				if (vmFile.isFile()) {
+					try {
+						Files.deleteIfExists(FileSystems.getDefault().getPath(
+								vmFile.getAbsolutePath()));
+					} catch (Exception e) {
+						throw new IOException();
+					}
+				}
 
 			}
 
