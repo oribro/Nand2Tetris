@@ -3,8 +3,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,11 +14,11 @@ public class JackTokenizer {
 
     public enum TokenType{KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST}
     private static final String WHITESPACE = "\\s*", COMMENT_REGEX = "\\/\\/.*|\\/\\*.*|\\/\\*\\*.*|.*\\*\\/",
-    COMMENT_HALF_LINE = "((\\/\\*\\*|\\/\\*).*\\*\\/)",
+   // COMMENT_HALF_LINE = "((\\/\\*\\*|\\/\\*).*\\*\\/)",
     KEYWORD_REGEX="(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|" +
             "this|let|do|if|else|while|return)", SYMBOL_REGEX = "\\{|\\}|\\(|\\)|\\[|\\]|\\.|\\," +
             "|\\;|\\+|\\-|\\*|\\/|\\&|\\||\\<|\\>|\\=|\\~",
-            IDENTIFIER_REGEX = "([^\\d]\\w*)", INT_REGEX= "\\d+", STRING_REGEX = "(\\w|\\s)*";
+            IDENTIFIER_REGEX = "([^\\d]\\w*)", INT_REGEX= "\\d+", STRING_REGEX = "[^\\\"\\n]*";
     private BufferedReader fileReader;
     private String currToken, currLine;
     public JackTokenizer(File inputFile) throws IOException{
@@ -86,7 +84,9 @@ public class JackTokenizer {
         if (currToken.charAt(0) == '"') {
             currLine = currLine.substring(1, currLine.length());
             currToken = currLine.substring(0, currLine.indexOf('"'));
-            currLine = currLine.replaceFirst(currToken + "\"", "");
+            currLine = currLine.replace(currToken, "");
+            currLine = currLine.replaceFirst("\"", "");
+            currLine = currLine.replaceFirst("\"", "");
             return;
         }
         //if (tokenType() == null) {
