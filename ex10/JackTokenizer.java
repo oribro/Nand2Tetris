@@ -16,7 +16,7 @@ public class JackTokenizer {
 
     public enum TokenType{KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST}
     private static final String WHITESPACE = "\\s*", COMMENT_REGEX = "\\/\\/.*|\\/\\*.*|\\/\\*\\*.*|.*\\*\\/",
-    COMMENT_HALF_LINE = "(\\/\\*\\*|\\/\\*).*\\*\\/",
+    COMMENT_HALF_LINE = "((\\/\\*\\*|\\/\\*).*\\*\\/)",
     KEYWORD_REGEX="(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|" +
             "this|let|do|if|else|while|return)", SYMBOL_REGEX = "\\{|\\}|\\(|\\)|\\[|\\]|\\.|\\," +
             "|\\;|\\+|\\-|\\*|\\/|\\&|\\||\\<|\\>|\\=|\\~",
@@ -39,7 +39,7 @@ public class JackTokenizer {
     }
     public boolean checkEmpty() throws IOException
     {
-        if (currLine.isEmpty())
+        if (currLine.isEmpty() || currLine.matches(WHITESPACE))
         {
             currLine = fileReader.readLine();
             return true;
@@ -49,11 +49,19 @@ public class JackTokenizer {
 
     public boolean checkComment() throws IOException
     {
-        Pattern commentPattern = Pattern.compile(COMMENT_HALF_LINE);
+        /**TODO: take care of comments of this form
+         *
+         */
+        Pattern commentPattern = Pattern.compile("\\/\\*\\*.*");
         Matcher commentMatcher = commentPattern.matcher(currLine);
         if (commentMatcher.find()) {
-            currLine = commentMatcher.replaceAll("");
-            return false;
+            Matcher closeComment = Pattern.compile("\\s*\\*\\/\\s*").matcher(currLine);
+            while (!closeComment.find()) {
+                currLine = fileReader.readLine();
+                closeComment = Pattern.compile("\\s*\\*\\/\\s*").matcher(currLine);
+            }
+            currLine = currLine.substring(closeComment.end(), currLine.length());
+            return true;
         }
         if (currLine.matches(WHITESPACE + COMMENT_REGEX))
         {
@@ -81,7 +89,7 @@ public class JackTokenizer {
             currLine = currLine.replaceFirst(currToken + "\"", "");
             return;
         }
-        if (tokenType() == null) {
+        //if (tokenType() == null) {
             Matcher matcher = Pattern.compile(SYMBOL_REGEX).matcher(currToken);
             if (matcher.find()) {
                 int symbolIndex = matcher.start();
@@ -91,10 +99,9 @@ public class JackTokenizer {
                 else {
                     currToken = currToken.substring(0, symbolIndex);
                 }
-
             }
             //else?
-        }
+        //}
         if (currToken.toCharArray().length == 1) {
             currLine = currLine.substring(1, currLine.length());
             return;
