@@ -1,6 +1,4 @@
-package ex10;
 
-import interfaces.IllegalCommandException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -116,6 +114,16 @@ public class CompilationEngine{
         }
         writer.writeToken(tokenizer);
     }
+    private void checkConditionBody() throws IOException, IllegalTokenException
+    {
+    	if(!checkNextSymbol("{"))
+    		throw new IllegalTokenException(tokenizer.getToken());
+    	writer.writeToken(tokenizer);
+    	compileStatements();
+    	if(!checkNextSymbol("}"))
+    		throw new IllegalTokenException(tokenizer.getToken());
+    	writer.writeToken(tokenizer);
+    }
     public void compileSubroutine() throws IOException, IllegalTokenException {
         if (!checkNextKeyword("constructor|function|method")) {
             return;
@@ -139,36 +147,146 @@ public class CompilationEngine{
         compileSubroutineBody();
         compileSubroutine();
     }
+    
     public void compileParameterList() throws IOException, IllegalTokenException {
         checkType();
         writer.writeToken(tokenizer);
         checkNextIdentifier();
         writer.writeToken(tokenizer);
         checkAdditionalVars();
+        writer.writeToken(tokenizer);
     }
+    
     public void compileVarDec() throws IOException, IllegalTokenException {
         checkNextKeyword("var");
+        writer.writeToken(tokenizer);
         checkType();
+        writer.writeToken(tokenizer);
         checkNextIdentifier();
+        writer.writeToken(tokenizer);
         checkAdditionalVars();
+        writer.writeToken(tokenizer);
+        if(!checkNextSymbol(";"))
+    		throw new IllegalTokenException(tokenizer.getToken());
+        writer.writeToken(tokenizer);
+        
     }
-    public void compileStatements() {
-
+    
+    public void compileStatements() throws IOException, IllegalTokenException {
+    	 if (!checkNextKeyword("let|if|while|do|return")) {
+             return;
+         }
+    	 writer.writeToken(tokenizer);
+    	 String token = tokenizer.getToken();
+    	 switch (token){
+    	 	case "let": compileLet();
+    		 		break;
+    	 	case "if": compileIf();
+    	 			break;
+    	 	case "while": compileWhile();
+					break;
+    	 	case "do": compileDo();
+					break;
+    	 	case "return": compileReturn();
+    	 			break;
+    	 }
+    	 compileStatements();
     }
-    public void compileDo() {
+    
+    public void compileDo() throws IOException, IllegalTokenException {
+    	checkNextIdentifier();
+        writer.writeToken(tokenizer);
+                                     // TODO: Expression list
+        if(!checkNextSymbol(".")){
+        	if(!checkNextSymbol("("))
+        		throw new IllegalTokenException(tokenizer.getToken());
+        	writer.writeToken(tokenizer);
+        	if(!checkNextSymbol(")"))
+        		throw new IllegalTokenException(tokenizer.getToken());
+        	writer.writeToken(tokenizer);
+        }
+        else {
+        	checkNextIdentifier();
+            writer.writeToken(tokenizer);
+            if(!checkNextSymbol("("))
+        		throw new IllegalTokenException(tokenizer.getToken());
+        	writer.writeToken(tokenizer);
+        	if(!checkNextSymbol(")"))
+        		throw new IllegalTokenException(tokenizer.getToken());
+        	writer.writeToken(tokenizer);
+        }
 
+    	if(!checkNextSymbol(";"))
+    		throw new IllegalTokenException(tokenizer.getToken());
+        writer.writeToken(tokenizer);
     }
-    public void compileLet(){
-
+    
+    public void compileLet() throws IOException, IllegalTokenException{
+    	checkNextIdentifier();
+    	writer.writeToken(tokenizer);
+    	if (!checkNextSymbol("[")) {
+    		if(!checkNextSymbol("="))
+        		throw new IllegalTokenException(tokenizer.getToken());
+        }
+    	// array
+        else {
+            checkNextIdentifier();
+            writer.writeToken(tokenizer);
+            if (!checkNextSymbol("]")) {
+            	throw new IllegalTokenException(tokenizer.getToken());
+            }
+            writer.writeToken(tokenizer);
+            if(!checkNextSymbol("="))
+        		throw new IllegalTokenException(tokenizer.getToken());
+        }
+    	writer.writeToken(tokenizer);
+    	checkNextIdentifier();
+    	writer.writeToken(tokenizer);
+    	if(!checkNextSymbol(";"))
+    		throw new IllegalTokenException(tokenizer.getToken());
+    	writer.writeToken(tokenizer);
     }
-    public void compileWhile(){
-
+    
+    public void compileWhile() throws IllegalTokenException, IOException{
+    	if(!checkNextSymbol("("))
+    		throw new IllegalTokenException(tokenizer.getToken());
+    	writer.writeToken(tokenizer);
+    	checkNextIdentifier();
+    	writer.writeToken(tokenizer);
+    	if(!checkNextSymbol(")"))
+    		throw new IllegalTokenException(tokenizer.getToken());
+    	writer.writeToken(tokenizer);
+    	checkConditionBody();
     }
-    public void compileReturn(){
-
+    public void compileReturn() throws IOException, IllegalTokenException{
+    	if(!checkNextSymbol(";")){
+    		checkNextIdentifier();
+    		writer.writeToken(tokenizer);
+    		if(!checkNextSymbol(";")){
+    			throw new IllegalTokenException(tokenizer.getToken());
+    		}
+    		writer.writeToken(tokenizer);
+    	}
+    	else{
+    		writer.writeToken(tokenizer);
+    	}
     }
-    public void compileIf() {
-
+    public void compileIf() throws IOException, IllegalTokenException {
+    	if(!checkNextSymbol("(")){
+			throw new IllegalTokenException(tokenizer.getToken());
+		}
+    	writer.writeToken(tokenizer);
+    	checkNextIdentifier();
+		writer.writeToken(tokenizer);
+		if(!checkNextSymbol(")")){
+			throw new IllegalTokenException(tokenizer.getToken());
+		}
+		writer.writeToken(tokenizer);
+		checkConditionBody();
+		if(checkNextKeyword("else")){
+			writer.writeToken(tokenizer);
+			checkConditionBody();
+		}
     }
     public void compileExpression(){
 
