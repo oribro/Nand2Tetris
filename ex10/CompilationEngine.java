@@ -133,6 +133,9 @@ public class CompilationEngine{
         if (!checkNextSymbol(")")) {
             compileParameterList();
         }
+        else {
+            writer.writeToken(tokenizer);
+        }
         compileSubroutineBody();
         compileSubroutine();
     }
@@ -150,7 +153,7 @@ public class CompilationEngine{
         checkAdditionalVars();
     }
     public void compileStatements() {
-        
+
     }
     public void compileDo() {
 
