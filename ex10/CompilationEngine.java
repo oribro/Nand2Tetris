@@ -109,7 +109,12 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
-        
+        compileVarDec();
+        compileStatements();
+        if (!checkNextSymbol("}")){
+            throw new IllegalTokenException(tokenizer.getToken());
+        }
+        writer.writeToken(tokenizer);
     }
     public void compileSubroutine() throws IOException, IllegalTokenException {
         if (!checkNextKeyword("constructor|function|method")) {
@@ -138,11 +143,14 @@ public class CompilationEngine{
         writer.writeToken(tokenizer);
         checkAdditionalVars();
     }
-    public void compileVarDec() {
-
+    public void compileVarDec() throws IOException, IllegalTokenException {
+        checkNextKeyword("var");
+        checkType();
+        checkNextIdentifier();
+        checkAdditionalVars();
     }
     public void compileStatements() {
-
+        
     }
     public void compileDo() {
 
