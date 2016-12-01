@@ -9,90 +9,89 @@
 D=M
 @arr
 M=D
-@left // Variables for sorting
-M=0
-@right
-M=0
 // length of array
 @R15
 D=M
 @len
 M=D
-
 // Insertion sort
 @i
 M=0 // i = 0
 @j
 M=0 // j = 0
-(OUTERLOOP)
+@temp  // temp variable for swapping
+M=0
+@arrjminus1  //var for swapping: address arr+j-1
+M=0
+
+(OUTERLOOP)  // for (i=1;i<length;i++)
 @i
 M=M+1
-D=M
 @len
-D=D-M
-@END
-D;JEQ
-
+D=M-1
 @i
+D=M-D
+@END
+D;JGT
+
+@i   // j=i
 D=M
 @j
 M=D
-(INNERLOOP)
-@j
+
+(INNERLOOP) // while (j>0 and A[j-1] > A[j])
+@j     // j>0
 D=M
 @OUTERLOOP
-D;JLE       // If j <= 0  goto OUTERLOOP
-@arr
+D;JLE
+@arr    // A[j-1] < A[j]
 D=M
 @j
-A=M+D  
-D=M    
-@right
-M=D	   // A[j]
-@j
-D=M-1
-@arr
-A=M+D
+D=D+M
+A=D
 D=M
-@left
-M=D
-@right
+A=A-1
 D=M-D
 @OUTERLOOP
-D;JGE     // If A[j-1] <= A[j] goto OUTERLOOP
-
-// Swap A[j] and A[j-1]
-@arr
+D;JGE
+		 // Swap A[j] and A[j-1]:
+ 		// temp = A[j]
+		// A[j] = A[j-1]
+		// A[j-1] = temp          
+@arr  
 D=M
 @j
-A=D+M
-D=M
+D=D+M
+A=D 
+D=M      // temp = A[j]
 @temp
-M=D         // temp = A[j]
-@arr
+M=D
+
+@arr  // A[j] = A[j-1]
 D=M
 @j
-A=D+M
+D=D+M
+A=D
 A=A-1
 D=M
 A=A+1
-M=D	    // A[j] = A[j-1]
-@temp
-D=M
-@arr
-D=M
-@j
-A=D+M
+M=D
 A=A-1
-              ///////  NEED TO FIX THIS AND FIGURE HOW TO INSERT TO ARRAY//////
-M=D        // A[j-1] = temp
+D=A
+@arrjminus1
+M=D
 
-@j
+@temp  //A[j-1] = temp
+D=M
+@arrjminus1
+A=M
+M=D
+
+@j     // j=j-1
 M=M-1
+
 @INNERLOOP
 0;JMP
-
-
 
 (END)
 

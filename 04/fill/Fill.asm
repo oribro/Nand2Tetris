@@ -29,11 +29,11 @@ D=A
 M=D // Screen base address
 
 // Screen dimensions. 
-@255
+@256
 D=A
 @n
 M=D   // n = 256
-@32
+@31
 D=A
 @m
 M=D // m = 32
@@ -84,7 +84,6 @@ M=M+D
 
 
 
-
 (FILL)
 // Fill columns of the screen one after the other
 // Using nested loops
@@ -94,11 +93,11 @@ D=A
 M=D // Screen base address
 
 // Screen dimensions. 
-@255
+@256
 D=A
 @n
 M=D   // n = 256
-@32
+@31
 D=A
 @m
 M=D // m = 32
