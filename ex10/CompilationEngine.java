@@ -248,7 +248,7 @@ public class CompilationEngine{
         if (!subroutineCall()) {
             throw new IllegalTokenException(tokenizer.getToken());
         }
-        advance();
+
         if(!checkNextSymbol(";"))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
@@ -348,6 +348,7 @@ public class CompilationEngine{
         if(checkNextKeyword("else")){
             writer.writeToken(tokenizer);
             checkConditionBody();
+            advance();
         }
         writer.endBlock("ifStatement");
     }
@@ -371,9 +372,11 @@ public class CompilationEngine{
         switch (type) {
             case STRING_CONST:
                 writer.writeToken(tokenizer);
+                advance();
                 break;
             case INT_CONST:
                 writer.writeToken(tokenizer);
+                advance();
                 break;
             case KEYWORD:
                 if (!checkNextKeyword("true|false|null|this")) {
@@ -384,22 +387,24 @@ public class CompilationEngine{
                 break;
             case SYMBOL:
                 if (checkNextSymbol("\\(")) {
+                    writer.writeToken(tokenizer);
+                    advance();
                     compileExpression();
                     if (!checkNextSymbol("\\)")) {
                         throw new IllegalTokenException(tokenizer.getToken());
                     }
                     writer.writeToken(tokenizer);
+                    advance();
                 }
                 else if (checkNextSymbol("-|~")) {
                     writer.writeToken(tokenizer);
+                    advance();
                     compileTerm();
                 }
                 break;
             case IDENTIFIER:
                 if (!subroutineCall()) {
                     if (!checkNextSymbol("\\[")) {
-                        //writer.writeToken(tokenizer);
-
                         break;
                     }
                     // array
@@ -410,9 +415,12 @@ public class CompilationEngine{
                         if (!checkNextSymbol("\\]")) {
                             throw new IllegalTokenException(tokenizer.getToken());
                         }
+                        writer.writeToken(tokenizer);
+                        advance();
                         break;
                     }
                 }
+                break;
 
             default: throw new IllegalTokenException(tokenizer.getToken());
         }
@@ -447,6 +455,7 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
+        advance();
         return true;
     }
     public void compileExpressionList() throws IOException, IllegalTokenException {
