@@ -41,7 +41,7 @@ public class CompilationEngine{
     }
     private boolean checkNextSymbol(String symbol) throws IOException, IllegalTokenException{
         JackTokenizer.TokenType type = tokenizer.tokenType();
-        if (type == null || type != JackTokenizer.TokenType.SYMBOL || !tokenizer.symbol().equals(symbol)) {
+        if (type == null || type != JackTokenizer.TokenType.SYMBOL || !tokenizer.symbol().matches(symbol)) {
             return false;
         }
         return true;
@@ -54,25 +54,28 @@ public class CompilationEngine{
         if (!checkNextKeyword("class")) {
             throw new IllegalTokenException(tokenizer.getToken());
         }
+        writer.beginBlock("class");
         writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
         writer.writeToken(tokenizer);
         advance();
-        if (!checkNextSymbol("{")) {
+        if (!checkNextSymbol("\\{")) {
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
         compileClassVarDec();
         compileSubroutine();
-        advance();
-        if (!checkNextSymbol("}")) {
+
+        if (!checkNextSymbol("\\}")) {
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
+        while (tokenizer.hasMoreTokens() && (tokenizer.checkComment() || tokenizer.checkEmpty()));
         if (tokenizer.hasMoreTokens()) {
             throw new IllegalArgumentException(ILLEGAL_FILE_FORMAT);
         }
+        writer.endBlock("class");
         writer.close();
         tokenizer.close();
     }
@@ -90,6 +93,7 @@ public class CompilationEngine{
         if (!checkNextKeyword("static|field")) {
             return;
         }
+        writer.beginBlock("classVarDec");
         writer.writeToken(tokenizer);
         checkType();
         writer.writeToken(tokenizer);
@@ -101,6 +105,7 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
+        writer.endBlock("classVarDec");
         compileClassVarDec();
     }
     private void checkAdditionalVars() throws IOException, IllegalTokenException {
@@ -114,24 +119,25 @@ public class CompilationEngine{
         }
     }
     private void compileSubroutineBody() throws IOException, IllegalTokenException {
+        writer.beginBlock("subroutineBody");
         advance();
-        if (!checkNextSymbol("{")) {
+        if (!checkNextSymbol("\\{")) {
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
         compileVarDec();
        // advance();
-        if (!checkNextSymbol("}")) {
+        if (!checkNextSymbol("\\}")) {
             compileStatements();
         }
-        //add check for } after returning from statements
-        writer.writeToken(tokenizer);
+        writer.endBlock("subroutineBody");
     }
 
     public void compileSubroutine() throws IOException, IllegalTokenException {
         if (!checkNextKeyword("constructor|function|method")) {
             return;
         }
+        writer.beginBlock("subroutineDec");
         writer.writeToken(tokenizer);
         advance();
         if (!checkNextKeyword("void")) {
@@ -142,37 +148,46 @@ public class CompilationEngine{
         checkNextIdentifier();
         writer.writeToken(tokenizer);
         advance();
-        if (!checkNextSymbol("(")){
-            throw new IllegalTokenException(tokenizer.getToken());
-        }
-        advance();
-        if (!checkNextSymbol(")")) {
-            compileParameterList();
-        }
-        else {
-            writer.writeToken(tokenizer);
-        }
-        compileSubroutineBody();
-        if (!checkNextSymbol("}")) {
+        if (!checkNextSymbol("\\(")){
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
         advance();
+        writer.beginBlock("parameterList");
+        if (!checkNextSymbol("\\)")) {
+            compileParameterList();
+            if (!checkNextSymbol("\\)")) {
+                throw new IllegalTokenException(tokenizer.getToken());
+            }
+        }
+        writer.endBlock("parameterList");
+        writer.writeToken(tokenizer);
+        compileSubroutineBody();
+        if (!checkNextSymbol("\\}")) {
+            throw new IllegalTokenException(tokenizer.getToken());
+        }
+        writer.writeToken(tokenizer);
+        advance();
+        writer.endBlock("subroutineDec");
         compileSubroutine();
     }
     public void compileParameterList() throws IOException, IllegalTokenException {
+
         checkType();
         writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
         writer.writeToken(tokenizer);
         checkAdditionalVars();
+
     }
     public void compileVarDec() throws IOException, IllegalTokenException {
         advance();
         if (!checkNextKeyword("var")) {
             return;
         }
+        writer.beginBlock("varDec");
+        writer.writeToken(tokenizer);
         checkType();
         writer.writeToken(tokenizer);
         advance();
@@ -183,43 +198,45 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
+        writer.endBlock("varDec");
         compileVarDec();
     }
     public void compileStatements() throws IOException, IllegalTokenException {
-        if (!checkNextKeyword("let|if|while|do|return")) {
-            return;
+        writer.beginBlock("statements");
+        while (checkNextKeyword("let|if|while|do|return")) {
+            String token = tokenizer.getToken();
+            switch (token){
+                case "let": compileLet();
+                    break;
+                case "if": compileIf();
+                    break;
+                case "while": compileWhile();
+                    break;
+                case "do": compileDo();
+                    break;
+                case "return": compileReturn();
+                    break;
+            }
+            advance();
         }
-        writer.writeToken(tokenizer);
-        String token = tokenizer.getToken();
-        switch (token){
-            case "let": compileLet();
-                break;
-            case "if": compileIf();
-                break;
-            case "while": compileWhile();
-                break;
-            case "do": compileDo();
-                break;
-            case "return": compileReturn();
-                break;
-        }
-        advance();
-        compileStatements();
+        writer.endBlock("statements");
     }
 
     public void compileDo() throws IOException, IllegalTokenException {
+        writer.beginBlock("doStatement");
+        writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
         writer.writeToken(tokenizer);
         // TODO: Expression list
         advance();
-        if(!checkNextSymbol(".")){
+        if(!checkNextSymbol("\\.")){
             advance();
-            if(!checkNextSymbol("("))
+            if(!checkNextSymbol("\\("))
                 throw new IllegalTokenException(tokenizer.getToken());
             writer.writeToken(tokenizer);
             advance();
-            if(!checkNextSymbol(")"))
+            if(!checkNextSymbol("\\)"))
                 throw new IllegalTokenException(tokenizer.getToken());
             writer.writeToken(tokenizer);
         }
@@ -228,11 +245,11 @@ public class CompilationEngine{
             checkNextIdentifier();
             writer.writeToken(tokenizer);
             advance();
-            if(!checkNextSymbol("("))
+            if(!checkNextSymbol("\\("))
                 throw new IllegalTokenException(tokenizer.getToken());
             writer.writeToken(tokenizer);
             advance();
-            if(!checkNextSymbol(")"))
+            if(!checkNextSymbol("\\)"))
                 throw new IllegalTokenException(tokenizer.getToken());
             writer.writeToken(tokenizer);
         }
@@ -240,34 +257,37 @@ public class CompilationEngine{
         if(!checkNextSymbol(";"))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
+        writer.endBlock("doStatement");
     }
     private void checkConditionBody() throws IOException, IllegalTokenException
     {
         advance();
-        if(!checkNextSymbol("{"))
+        if(!checkNextSymbol("\\{"))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
+        advance();
         compileStatements();
-        if(!checkNextSymbol("}"))
+        if(!checkNextSymbol("\\}"))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
     }
     public void compileLet() throws IOException, IllegalTokenException{
+        writer.beginBlock("letStatement");
+        writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
         writer.writeToken(tokenizer);
         advance();
-        if (!checkNextSymbol("[")) {
+        if (!checkNextSymbol("\\[")) {
             if(!checkNextSymbol("="))
                 throw new IllegalTokenException(tokenizer.getToken());
         }
         // array
         else {
-            advance();
-            checkNextIdentifier();
             writer.writeToken(tokenizer);
             advance();
-            if (!checkNextSymbol("]")) {
+            compileExpression();
+            if (!checkNextSymbol("\\]")) {
                 throw new IllegalTokenException(tokenizer.getToken());
             }
             writer.writeToken(tokenizer);
@@ -277,51 +297,54 @@ public class CompilationEngine{
         }
         writer.writeToken(tokenizer);
         advance();
-        checkNextIdentifier();
-        writer.writeToken(tokenizer);
-        advance();
-        if(!checkNextSymbol(";"))
+        compileExpression();
+        if (!checkNextSymbol(";")) {
             throw new IllegalTokenException(tokenizer.getToken());
+        }
+
         writer.writeToken(tokenizer);
+        writer.endBlock("letStatement");
     }
 
     public void compileWhile() throws IllegalTokenException, IOException{
+        writer.beginBlock("whileStatement");
+        writer.writeToken(tokenizer);
         advance();
-        if(!checkNextSymbol("("))
+        if(!checkNextSymbol("\\("))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
         advance();
-        checkNextIdentifier();
-        writer.writeToken(tokenizer);
-        advance();
-        if(!checkNextSymbol(")"))
+        compileExpression();
+        if(!checkNextSymbol("\\)"))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
         checkConditionBody();
+        writer.endBlock("whileStatement");
     }
     public void compileReturn() throws IOException, IllegalTokenException{
+        writer.beginBlock("returnStatement");
+        writer.writeToken(tokenizer);
         advance();
         if(!checkNextSymbol(";")){
-            checkNextIdentifier();
-            writer.writeToken(tokenizer);
-            advance();
+            compileExpression();
             if(!checkNextSymbol(";")){
                 throw new IllegalTokenException(tokenizer.getToken());
             }
         }
         writer.writeToken(tokenizer);
+        writer.endBlock("returnStatement");
     }
     public void compileIf() throws IOException, IllegalTokenException {
+        writer.beginBlock("ifStatement");
+        writer.writeToken(tokenizer);
         advance();
-        if(!checkNextSymbol("(")){
+        if(!checkNextSymbol("\\(")){
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
         advance();
-        checkNextIdentifier();
-        writer.writeToken(tokenizer);
-        advance();
-        if(!checkNextSymbol(")")){
+        compileExpression();
+        if(!checkNextSymbol("\\)")){
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
@@ -331,14 +354,104 @@ public class CompilationEngine{
             writer.writeToken(tokenizer);
             checkConditionBody();
         }
+        writer.endBlock("ifStatement");
     }
-    public void compileExpression(){
-
+    public void compileExpression() throws IOException, IllegalTokenException {
+        writer.beginBlock("expression");
+        compileTerm();
+        while (checkNextSymbol("\\+|\\-|\\*|\\/|\\&amp;|\\||\\&lt;|\\&gt;|\\=")) {
+            writer.writeToken(tokenizer);
+            compileTerm();
+        }
+        writer.endBlock("expression");
+        return;
     }
-    public void compileTerm(){
+    public void compileTerm() throws IOException, IllegalTokenException {
+        writer.beginBlock("term");
+        JackTokenizer.TokenType type = tokenizer.tokenType();
+        switch (type) {
+            case STRING_CONST:
+                writer.writeToken(tokenizer);
+                break;
+            case INT_CONST:
+                writer.writeToken(tokenizer);
+                break;
+            case KEYWORD:
+                if (!checkNextKeyword("true|false|null|this")) {
+                    throw new IllegalTokenException(tokenizer.getToken());
+                }
+                writer.writeToken(tokenizer);
+                break;
+            case SYMBOL:
+                if (checkNextSymbol("\\(")) {
+                    compileExpression();
+                    if (!checkNextSymbol("\\)")) {
+                        throw new IllegalTokenException(tokenizer.getToken());
+                    }
+                    writer.writeToken(tokenizer);
+                }
+                else if (checkNextSymbol("-|~")) {
+                    writer.writeToken(tokenizer);
+                    compileTerm();
+                }
+                break;
+            case IDENTIFIER:
+                if (!subroutineCall()) {
+                    if (!checkNextSymbol("\\[")) {
+                        break;
+                    }
+                    // array
+                    else {
+                        writer.writeToken(tokenizer);
+                        advance();
+                        compileExpression();
+                        if (!checkNextSymbol("\\]")) {
+                            throw new IllegalTokenException(tokenizer.getToken());
+                        }
+                        break;
+                    }
+                }
 
+            default: throw new IllegalTokenException(tokenizer.getToken());
+        }
+        writer.endBlock("term");
+        return;
     }
-    public void compileExpressionList(){
-
+    private boolean subroutineCall() throws IllegalTokenException, IOException {
+        checkNextIdentifier();
+        writer.writeToken(tokenizer);
+        advance();
+        if (!checkNextSymbol("\\(|\\.")) {
+            return false;
+        }
+        writer.writeToken(tokenizer);
+        if (tokenizer.symbol().equals(".")){
+                advance();
+                checkNextIdentifier();
+                writer.writeToken(tokenizer);
+                advance();
+                if (!checkNextSymbol("\\(")) {
+                    throw new IllegalTokenException(tokenizer.getToken());
+                }
+                writer.writeToken(tokenizer);
+        }
+        advance();
+        if (!checkNextSymbol("\\)")) {
+            compileExpressionList();
+        }
+        advance();
+        if (!checkNextSymbol("\\)")) {
+            throw new IllegalTokenException(tokenizer.getToken());
+        }
+        writer.writeToken(tokenizer);
+        return true;
+    }
+    public void compileExpressionList() throws IOException, IllegalTokenException {
+        compileExpression();
+        while (checkNextSymbol(",")) {
+            writer.writeToken(tokenizer);
+            advance();
+            compileExpression();
+        }
     }
 }

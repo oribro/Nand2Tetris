@@ -8,15 +8,23 @@ import java.io.PrintWriter;
  */
 public class XmlWriter {
     private PrintWriter writer;
-    public static final String BEGIN_FILE = "<tokens>", END_FILE = "</tokens>", OPENER_LEFT = "<", OPENER_RIGHT = "</",
+    private String space;
+    public static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
             CLOSER = ">", WHITESPACE = " ";
     public XmlWriter(String filename) throws FileNotFoundException{
         writer = new PrintWriter(filename);
-        writer.println(BEGIN_FILE);
+        space = "";
     }
     public void close() {
-        writer.println(END_FILE);
         writer.close();
+    }
+    public void beginBlock(String blockName) {
+        writer.println(space + OPENER_LEFT+blockName+CLOSER);
+        space+= "  ";
+    }
+    public void endBlock(String blockName) {
+        space= space.substring(2, space.length());
+        writer.println(space + OPENER_RIGHT + blockName + CLOSER);
     }
     public void writeToken(JackTokenizer tokenizer) throws IllegalTokenException{
         String typeString="", terminal="";
@@ -45,6 +53,6 @@ public class XmlWriter {
                 terminal = tokenizer.getToken();
                 break;
         }
-        writer.println(OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
+        writer.println(space + OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
     }
 }
