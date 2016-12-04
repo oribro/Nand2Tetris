@@ -8,20 +8,6 @@ public class JackAnalyzer {
     private static final String NAME_DELIMITER = ".";
     private static final String IN_SUFFIX = "jack";
     private static final String OUT_SUFFIX = "xml";
-    //private static void translate(File inputFile, XmlWriter writer) throws IOException, IllegalTokenException{
-
-//        JackTokenizer tokenizer = new JackTokenizer(inputFile);
-//        while(tokenizer.hasMoreTokens())
-//        {
-//            if (tokenizer.checkComment())
-//                continue;
-//            if (tokenizer.checkEmpty())
-//                continue;
-//            tokenizer.advance();
-//            writer.writeToken(tokenizer);
-//        }
-//        tokenizer.close();
-    //}
         public static void main(String[] args) {
             try {
                 File inputFile = new File(args[0]);

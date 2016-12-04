@@ -7,10 +7,11 @@ import java.io.PrintWriter;
  * Created by hadas on 28/11/2016.
  */
 public class XmlWriter {
+    private static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
+            CLOSER = ">", WHITESPACE = "  ";
+    private static final int WHITESPACE_LENGTH = 2;
     private PrintWriter writer;
     private String space;
-    public static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
-            CLOSER = ">", WHITESPACE = " ";
     public XmlWriter(String filename) throws FileNotFoundException{
         writer = new PrintWriter(filename);
         space = "";
@@ -20,10 +21,10 @@ public class XmlWriter {
     }
     public void beginBlock(String blockName) {
         writer.println(space + OPENER_LEFT+blockName+CLOSER);
-        space+= "  ";
+        space+= WHITESPACE;
     }
     public void endBlock(String blockName) {
-        space= space.substring(2, space.length());
+        space= space.substring(WHITESPACE_LENGTH, space.length());
         writer.println(space + OPENER_RIGHT + blockName + CLOSER);
     }
     public void writeToken(JackTokenizer tokenizer) throws IllegalTokenException{
