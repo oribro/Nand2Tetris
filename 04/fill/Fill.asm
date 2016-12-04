@@ -13,138 +13,65 @@
 
 (MAIN)
 // Listen to the keyboard
-@KBD
-D=M
-@FILL
-D;JNE // A key is pressed on the keyboard
-@CLEAR
-0;JMP
-
-(CLEAR)
-// Clear columns of the screen one after the other
-// Using nested loops
-@SCREEN
-D=A
-@addr
-M=D // Screen base address
-
-// Screen dimensions. 
-@256
-D=A
-@n
-M=D   // n = 256
-@31
-D=A
-@m
-M=D // m = 32
-
-// Clear a whole column
-@j
-M=-1 // j=0
-(OUTERLOOPCLEAR)
-@j
-D=M
-@m
-D=D-M   // if j>m goto END
-@MAIN
-D;JGT
-@j
-M=M+1
-@SCREEN
-D=A
-@addr
-M=D
-@j
-D=M
-@addr
-M=M+D
-@i
-M=0 // i=0
-// Clear the rows of the column
-(INNERLOOPCLEAR)
-@i
-D=M
-@n
-D=D-M
-@OUTERLOOPCLEAR
-D;JEQ
-
-@addr
-A=M
-M=0
-
-@i
-M=M+1
-@32
-D=A
-@addr
-M=M+D
-@INNERLOOPCLEAR
-0;JMP
-
-
+//@KBD
+//D=M
+//@FILL
+//D;JNE // A key is pressed on the keyboard
+//@CLEAR
+//0;JMP
 
 (FILL)
-// Fill columns of the screen one after the other
-// Using nested loops
-@SCREEN
+@col   // Column number
+M=-1
+@SCREEN   // addr = SCREEN
 D=A
-@addr
-M=D // Screen base address
+@addr   // current chunk of bytes' address in memory
+M=D
 
-// Screen dimensions. 
-@256
-D=A
-@n
-M=D   // n = 256
-@31
-D=A
-@m
-M=D // m = 32
-
-// Fill a whole column
-@j
-M=-1 // j=0
-(OUTERLOOPFILL)
-@j
-D=M
-@m
-D=D-M   // if j>m goto END
-@MAIN
-D;JGT
-@j
+(FILLCOLUMNS)
+@row    // Row number
+M=0
+@col       // for (int c=0;c<512; c++)
 M=M+1
-@SCREEN
-D=A
+D=M
+@SCREEN   // addr = SCREEN + col
+D=A+D
 @addr
 M=D
-@j
+@col
 D=M
-@addr
-M=M+D
-@i
-M=0 // i=0
-// Fill the rows of the column
-(INNERLOOPFILL)
-@i
-D=M
-@n
-D=D-M
-@OUTERLOOPFILL
+@512
+D=D-A
+@END
 D;JEQ
+
+(FILLPIXELCOLUMN)
+@row      //for (int r=0; r<256; r++)
+D=M
+@256
+D=D-A
+@FILLCOLUMNS
+D;JEQ
+
+@addr // RAM[addr] = 1
+D=M          // Check boundaries
+@KBD
+D=D-A
+@END
+D;JGE
 
 @addr
 A=M
-M=-1
-
-@i
-M=M+1
+M=-1    // addr += 32
 @32
 D=A
-@addr
+@addr   
 M=M+D
-@INNERLOOPFILL
+
+@row
+M=M+1
+
+@FILLPIXELCOLUMN
 0;JMP
 
-@MAIN
-0;JMP
+(END)
