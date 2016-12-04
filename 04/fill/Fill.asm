@@ -13,12 +13,68 @@
 
 (MAIN)
 // Listen to the keyboard
-//@KBD
-//D=M
-//@FILL
-//D;JNE // A key is pressed on the keyboard
-//@CLEAR
-//0;JMP
+@KBD
+D=M
+@FILL
+D;JNE // A key is pressed on the keyboard
+@CLEAR
+0;JMP
+
+(CLEAR)
+@col   // Column number
+M=-1
+@SCREEN   // addr = SCREEN
+D=A
+@addr   // current chunk of bytes' address in memory
+M=D
+
+(CLEARCOLUMNS)
+@row    // Row number
+M=0
+@col       // for (int c=0;c<512; c++)
+M=M+1
+D=M
+@SCREEN   // addr = SCREEN + col
+D=A+D
+@addr
+M=D
+@col
+D=M
+@512
+D=D-A
+@MAIN
+D;JEQ
+
+(CLEARPIXELCOLUMN)
+@row      //for (int r=0; r<256; r++)
+D=M
+@256
+D=D-A
+@CLEARCOLUMNS
+D;JEQ
+
+@addr // RAM[addr] = 1
+D=M          // Check boundaries
+@KBD
+D=D-A
+@MAIN
+D;JGE
+
+@addr
+A=M
+M=0    // addr += 32
+@32
+D=A
+@addr   
+M=M+D
+
+@row
+M=M+1
+
+@CLEARPIXELCOLUMN
+0;JMP
+
+
 
 (FILL)
 @col   // Column number
@@ -42,7 +98,7 @@ M=D
 D=M
 @512
 D=D-A
-@END
+@MAIN
 D;JEQ
 
 (FILLPIXELCOLUMN)
@@ -57,7 +113,7 @@ D;JEQ
 D=M          // Check boundaries
 @KBD
 D=D-A
-@END
+@MAIN
 D;JGE
 
 @addr
@@ -73,5 +129,3 @@ M=M+1
 
 @FILLPIXELCOLUMN
 0;JMP
-
-(END)
