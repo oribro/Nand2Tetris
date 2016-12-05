@@ -1,4 +1,3 @@
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
@@ -6,21 +5,36 @@ import java.io.PrintWriter;
  * Created by hadas on 28/11/2016.
  */
 public class VMWriter {
+	private static final String CONST = "constant", ARG = "argument", LOCAL = "local",
+			STATIC = "static", THIS = "this", THAT = "that", POINTER = "pointer", TEMP = "temp",
+			ADD = "add", SUB = "sub", NEG = "neg", EQ = "eq", GT = "gt", LT = "lt", AND = "and",
+			OR = "or", NOT = "not";
+	private static final String NAME_DELIMITER = ".";
+	private static final String IDENTIFIER_REGEX = "([^\\d]\\w*)";
+    private static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
+            CLOSER = ">", WHITESPACE = "  ";
+    private static final int WHITESPACE_LENGTH = 2;
     private PrintWriter writer;
+    private PrintWriter vmWriter;
     private SymbolTable symbolTable;
-    
-    private static final String NAME_DELIMITER = ".";
-    private static final String IDENTIFIER_REGEX = "([^\\d]\\w*)";
-    public static final String BEGIN_FILE = "<tokens>", END_FILE = "</tokens>", OPENER_LEFT = "<", OPENER_RIGHT = "</",
-            CLOSER = ">", WHITESPACE = " ";
+    private String space;
     public VMWriter(String filename, SymbolTable symbolTable) throws FileNotFoundException{
         writer = new PrintWriter(filename);
+        vmWriter = new PrintWriter(filename.replace("xml", "vm"));
         this.symbolTable = symbolTable;
-        writer.println(BEGIN_FILE);
+        space = "";
     }
     public void close() {
-        writer.println(END_FILE);
         writer.close();
+        vmWriter.close();
+    }
+    public void beginBlock(String blockName) {
+        writer.println(space + OPENER_LEFT+blockName+CLOSER);
+        space+= WHITESPACE;
+    }
+    public void endBlock(String blockName) {
+        space= space.substring(WHITESPACE_LENGTH, space.length());
+        writer.println(space + OPENER_RIGHT + blockName + CLOSER);
     }
     public void writeToken(JackTokenizer tokenizer) throws IllegalTokenException{
         String typeString="", terminal="";
@@ -36,11 +50,6 @@ public class VMWriter {
                 typeString = "symbol";
                 terminal = tokenizer.symbol();
                 break;
-            case IDENTIFIER:
-                typeString = "identifier";
-                terminal = tokenizer.getToken();
-                writeIdentifier(typeString, terminal, tokenizer);
-                return;
             case INT_CONST:
                 typeString = "integerConstant";
                 terminal = tokenizer.getToken();
@@ -49,32 +58,105 @@ public class VMWriter {
                 typeString = "stringConstant";
                 terminal = tokenizer.getToken();
                 break;
+		default:
+			break;
         }
-        writer.println(OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
+        writer.println(space + OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
     }
     
     // Use the symbol table to extend identifier
-    private void writeIdentifier(String typeString, String identifier, JackTokenizer tokenizer){
-    	 writer.println(OPENER_LEFT + typeString + CLOSER);
-    	 writer.println(identifier);
-    	 String className = tokenizer.getClassName();
+    public void writeIdentifier(String identifier, String varState, JackTokenizer tokenizer){
+    	 writer.println(space + OPENER_LEFT + "identifier" + CLOSER);
+    	 writer.println(space + OPENER_LEFT + "name" + CLOSER +WHITESPACE+ identifier +WHITESPACE+OPENER_RIGHT+"name" + CLOSER);
+    	 //String className = tokenizer.getClassName();
     	 String category = null;
-    	 String varState = "none";
     	 String runningIndex = null;
-    	 if (identifier.equals(className))
+    	 if (identifier.matches(IDENTIFIER_REGEX))
     		 category = "class";
-    	 else if (identifier.matches((className + "\\" + NAME_DELIMITER + IDENTIFIER_REGEX)))
+    	 else if (identifier.matches((IDENTIFIER_REGEX + "\\" + NAME_DELIMITER + IDENTIFIER_REGEX)))
     		 category = "subroutine";
     	 else{
     		 category = symbolTable.kindOf(identifier);
     		 runningIndex = symbolTable.indexOf(identifier);
-    		 writer.println(OPENER_LEFT + "index" + CLOSER +WHITESPACE+ runningIndex +WHITESPACE+OPENER_RIGHT+ "index" + CLOSER);
+    		 writer.println(space + OPENER_LEFT + "index" + CLOSER +WHITESPACE+ runningIndex +WHITESPACE+OPENER_RIGHT+ "index" + CLOSER);
     	 } 
-    	 writer.println(OPENER_LEFT + "category" + CLOSER +WHITESPACE+ category +WHITESPACE+OPENER_RIGHT+ "category" + CLOSER);
-    	 if (symbolTable.kindOf(identifier).equals("variable"))
-    		 varState = "defined";
+    	 writer.println(space + OPENER_LEFT + "category" + CLOSER +WHITESPACE+ category +WHITESPACE+OPENER_RIGHT+ "category" + CLOSER);
     	 // TODO: Handle used variables in expressions
-    	 writer.println(OPENER_LEFT + "state" + CLOSER +WHITESPACE+ varState +WHITESPACE+OPENER_RIGHT+ "state" + CLOSER);
-    	 writer.println(OPENER_RIGHT+typeString + CLOSER);
+    	 writer.println(space + OPENER_LEFT + "state" + CLOSER +WHITESPACE+ varState +WHITESPACE+OPENER_RIGHT+ "state" + CLOSER);
+    	 writer.println(space + OPENER_RIGHT+ "identifier" + CLOSER);
+    }
+    
+    public void writePush(String segment, String index)
+    {
+    	vmWriter.println("push " +segment+ " " + index);
+    }
+    
+    public void writePop(String segment, String index)
+    {
+    	
+    }
+    
+    public void writeArithmetic(String command)
+    {
+    	switch(command){
+    	case "+": vmWriter.println(ADD);
+    				break;
+    	case "-": vmWriter.println(SUB);
+					break;
+    	case "*": writeCall("Math.multiply", 2);
+					break;
+    	case "/": writeCall("Math.divide", 2);
+					break;
+    	case "|": vmWriter.println(OR);
+					break;
+    	case "&amp": vmWriter.println(AND);
+					break;
+    	case "&lt": vmWriter.println(LT);
+					break;
+    	case "&gt": vmWriter.println(GT);
+					break;
+    	case "=": vmWriter.println(EQ);
+					break;
+    	case "\\-": vmWriter.println(NEG);
+					break;
+    	case "~": vmWriter.println(NOT);
+					break;
+    	}
+    }
+    
+    public void writeLabel(String label)
+    {
+    	
+    }
+    
+    public void writeGoto(String label)
+    {
+    	
+    }
+    
+    public void writeIf(String label)
+    {
+    	
+    }
+    
+    public void writeCall(String name, int nArgs)
+    {
+    	vmWriter.println("call " + name + " " + Integer.toString(nArgs));
+    }
+    
+    public void writeFunction(String name, int nLocals)
+    {
+    	vmWriter.println("function " + name + " " + Integer.toString(nLocals));
+    }
+    
+    public void writeReturn()
+    {
+    	vmWriter.println("return");
     }
 }
+
+
+
+
+
+
