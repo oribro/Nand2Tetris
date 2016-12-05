@@ -17,6 +17,9 @@ public class CompilationEngine{
             CLASS_VAR_TYPE = "static|field", SUBROUTINE_TYPE = "constructor|function|method",
             STATEMENTS_TYPES = "let|if|while|do|return", OP = "\\+|\\-|\\*|\\/|\\&amp;|\\||\\&lt;|\\&gt;|\\=",
             UNARY_OP = "-|~";
+    private static final String WHILE_START = "WHILE_EXP",  WHILE_END = "WHILE_END",
+    		IF_COND = "IF_TRUE", ELSE_COND = "IF_FALSE", IF_END = "IF_END";
+    private int whileCounter = 0, ifCounter = 0, elseCounter = 0;
     private VMWriter writer;
     private SymbolTable symbolTable;
     private JackTokenizer tokenizer;
@@ -173,12 +176,14 @@ public class CompilationEngine{
         if (!checkNextKeyword(SUBROUTINE_TYPE)) {
             return;
         }
+        symbolTable.startSubroutine();
         writer.beginBlock("subroutineDec");
         writer.writeToken(tokenizer);
         advance();
         if (!checkNextKeyword("void")) {
             checkType();
         }
+        String type = tokenizer.getToken();
         writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
@@ -288,10 +293,10 @@ public class CompilationEngine{
         if (!subroutineCall()) {
             throw new IllegalTokenException(tokenizer.getToken());
         }
-
         if(!checkNextSymbol(END_OF_STATEMENT))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
+        writer.writePop(TEMP, "0");
         writer.endBlock("doStatement");
     }
     private void checkConditionBody() throws IOException, IllegalTokenException
@@ -312,6 +317,8 @@ public class CompilationEngine{
         advance();
         checkNextIdentifier();
         String name = tokenizer.getToken();
+        String kind = null;
+        String index = null;
         writer.writeIdentifier(name, "used", tokenizer);
         advance();
         if (!checkNextSymbol(ARRAY_OPENER)) {
@@ -339,12 +346,24 @@ public class CompilationEngine{
         }
 
         writer.writeToken(tokenizer);
+        kind = symbolTable.kindOf(name);
+        index = symbolTable.indexOf(name);
+        if (kind.equals("variable")){
+        	writer.writePop(LOCAL, index);
+        }
+        if (kind.equals(ARG)){
+        	writer.writePop(ARG, index);;
+        }
+        if (kind.equals(STATIC)){
+        	writer.writePop(STATIC, index);;
+        }
         writer.endBlock("letStatement");
     }
 
     public void compileWhile() throws IllegalTokenException, IOException{
         writer.beginBlock("whileStatement");
         writer.writeToken(tokenizer);
+        writer.writeLabel(WHILE_START, Integer.toString(whileCounter));
         advance();
         if(!checkNextSymbol(PARENTHESIS_LEFT))
             throw new IllegalTokenException(tokenizer.getToken());
@@ -354,23 +373,35 @@ public class CompilationEngine{
         if(!checkNextSymbol(PARENTHESIS_RIGHT))
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
+        writer.writeArithmetic("~");
+        writer.writeIf(WHILE_END, Integer.toString(whileCounter));
+        whileCounter++;
         checkConditionBody();
+        whileCounter--;
+        writer.writeGoto(WHILE_START, Integer.toString(whileCounter));
+        writer.writeLabel(WHILE_END, Integer.toString(whileCounter));
         writer.endBlock("whileStatement");
     }
     public void compileReturn() throws IOException, IllegalTokenException{
         writer.beginBlock("returnStatement");
         writer.writeToken(tokenizer);
         advance();
+        // Non-void function.
         if(!checkNextSymbol(END_OF_STATEMENT)){
             compileExpression();
             if(!checkNextSymbol(END_OF_STATEMENT)){
                 throw new IllegalTokenException(tokenizer.getToken());
             }
         }
+        // Return 0 for void function.
+        else{
+        	writer.writePush(CONST, "0");
+        }
         writer.writeToken(tokenizer);
         writer.writeReturn();
         writer.endBlock("returnStatement");
     }
+    
     public void compileIf() throws IOException, IllegalTokenException {
         writer.beginBlock("ifStatement");
         writer.writeToken(tokenizer);
@@ -385,13 +416,23 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
+        writer.writeIf(IF_COND, Integer.toString(ifCounter));
+        writer.writeGoto(ELSE_COND, Integer.toString(ifCounter));
+        writer.writeLabel(IF_COND, Integer.toString(ifCounter));
+        ifCounter++;
         checkConditionBody();
+        ifCounter--;
+        writer.writeGoto(IF_END, Integer.toString(ifCounter));
         advance();
         if(checkNextKeyword("else")){
             writer.writeToken(tokenizer);
+            writer.writeLabel(ELSE_COND, Integer.toString(ifCounter));
+            elseCounter++;
             checkConditionBody();
+            elseCounter--;
             advance();
         }
+        writer.writeLabel(IF_END, Integer.toString(ifCounter));
         writer.endBlock("ifStatement");
     }
     public void compileExpression() throws IOException, IllegalTokenException {
@@ -428,7 +469,14 @@ public class CompilationEngine{
                 if (!checkNextKeyword("true|false|null|this")) {
                     throw new IllegalTokenException(tokenizer.getToken());
                 }
+                String value = tokenizer.getToken();
                 writer.writeToken(tokenizer);
+                if (value.matches("true")){
+                	writer.writePush(CONST, "1");
+                	writer.writeArithmetic("\\-");
+                }
+                if (value.matches("false|null"))
+                	writer.writePush(CONST, "0");
                 advance();
                 break;
             case SYMBOL:
@@ -444,9 +492,13 @@ public class CompilationEngine{
                 }
                 else if (checkNextSymbol(UNARY_OP)) {
                     writer.writeToken(tokenizer);
+                    String op = tokenizer.getToken();
                     advance();
                     compileTerm();
-                    writer.writeArithmetic("\\-" + tokenizer.getToken());
+                    if (op.equals("-"))
+                    	writer.writeArithmetic("\\-");
+                    if (op.equals("~"))
+                    	writer.writeArithmetic(op);
                 }
                 break;
             case IDENTIFIER:
@@ -477,12 +529,19 @@ public class CompilationEngine{
     private boolean subroutineCall() throws IllegalTokenException, IOException {
         checkNextIdentifier();
         String name = tokenizer.getToken();
-        writer.writeIdentifier(name, "used", tokenizer);
+        String kind = symbolTable.kindOf(name);
+        String index = symbolTable.indexOf(name);
         advance();
         if (!checkNextSymbol("\\(|\\.")) {
+        	writer.writeIdentifier(name, "used", tokenizer);
+        	if (kind.equals("variable"))
+        		writer.writePush(LOCAL, index);
+        	if (kind.equals(ARG))
+        		writer.writePush(ARG, index);
+        	if (kind.equals(STATIC))
+        		writer.writePush(STATIC, index);
             return false;
         }
-        writer.writeToken(tokenizer);
         if (tokenizer.symbol().equals(".")){
                 advance();
                 checkNextIdentifier();

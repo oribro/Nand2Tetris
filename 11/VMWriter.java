@@ -71,7 +71,7 @@ public class VMWriter {
     	 //String className = tokenizer.getClassName();
     	 String category = null;
     	 String runningIndex = null;
-    	 if (identifier.matches(IDENTIFIER_REGEX))
+    	 if (identifier.matches(tokenizer.getClassName()))
     		 category = "class";
     	 else if (identifier.matches((IDENTIFIER_REGEX + "\\" + NAME_DELIMITER + IDENTIFIER_REGEX)))
     		 category = "subroutine";
@@ -93,7 +93,7 @@ public class VMWriter {
     
     public void writePop(String segment, String index)
     {
-    	
+    	vmWriter.println("pop " +segment+ " " + index);
     }
     
     public void writeArithmetic(String command)
@@ -109,11 +109,11 @@ public class VMWriter {
 					break;
     	case "|": vmWriter.println(OR);
 					break;
-    	case "&amp": vmWriter.println(AND);
+    	case "&": vmWriter.println(AND);
 					break;
-    	case "&lt": vmWriter.println(LT);
+    	case "<": vmWriter.println(LT);
 					break;
-    	case "&gt": vmWriter.println(GT);
+    	case ">": vmWriter.println(GT);
 					break;
     	case "=": vmWriter.println(EQ);
 					break;
@@ -124,19 +124,19 @@ public class VMWriter {
     	}
     }
     
-    public void writeLabel(String label)
+    public void writeLabel(String label, String labelCounter)
     {
-    	
+    	vmWriter.println("label " + label + labelCounter);
     }
     
-    public void writeGoto(String label)
+    public void writeGoto(String label, String labelCounter)
     {
-    	
+    	vmWriter.println("goto " + label + labelCounter);
     }
     
-    public void writeIf(String label)
+    public void writeIf(String label, String labelCounter)
     {
-    	
+    	vmWriter.println("if-goto " + label + labelCounter);
     }
     
     public void writeCall(String name, int nArgs)

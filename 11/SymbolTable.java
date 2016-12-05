@@ -11,11 +11,13 @@ public class SymbolTable {
 	private int staticRunningIndex, fieldRunningIndex, argRunningIndex, varRunningIndex;
 	private HashMap<String, ArrayList<String>> methodScopeTable;
 	private HashMap<String, ArrayList<String>> classScopeTable;
+	private HashMap<String, String> methodTypesTable;
 	
 	SymbolTable()
 	{
 		classScopeTable = new HashMap<String, ArrayList<String>>();
 		methodScopeTable = new HashMap<String, ArrayList<String>>();
+		methodTypesTable = new HashMap<String, String>();
 		staticRunningIndex = 0; 
 		argRunningIndex = 0;
 		fieldRunningIndex = 0;
@@ -122,5 +124,13 @@ public class SymbolTable {
 		if (methodScopeTable.containsKey(name))
 			return methodScopeTable.get(name).get(INDEX_COLUMN);
 		return "none";
+	}
+	
+	public void addMethodType(String name, String type){
+		methodTypesTable.put(name, type);
+	}
+	
+	public String getMethodType(String name){
+		return methodTypesTable.get(name);
 	}
 }
