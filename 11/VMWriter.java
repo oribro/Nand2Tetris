@@ -11,6 +11,8 @@ public class VMWriter {
 			OR = "or", NOT = "not";
 	private static final String NAME_DELIMITER = ".";
 	private static final String IDENTIFIER_REGEX = "([^\\d]\\w*)";
+	private static final String CLASS_REGEX = "[^\\d]\\w*";
+	private static final String METHOD_REGEX = IDENTIFIER_REGEX + "\\." + IDENTIFIER_REGEX;
     private static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
             CLOSER = ">", WHITESPACE = "  ";
     private static final int WHITESPACE_LENGTH = 2;
@@ -50,6 +52,10 @@ public class VMWriter {
                 typeString = "symbol";
                 terminal = tokenizer.symbol();
                 break;
+            case IDENTIFIER:
+            	typeString = "identifier";
+            	terminal = tokenizer.getToken();
+            	break;
             case INT_CONST:
                 typeString = "integerConstant";
                 terminal = tokenizer.getToken();
@@ -71,10 +77,10 @@ public class VMWriter {
     	 //String className = tokenizer.getClassName();
     	 String category = null;
     	 String runningIndex = null;
-    	 if (identifier.matches(tokenizer.getClassName()))
-    		 category = "class";
-    	 else if (identifier.matches((IDENTIFIER_REGEX + "\\" + NAME_DELIMITER + IDENTIFIER_REGEX)))
+    	 if (identifier.matches((IDENTIFIER_REGEX + "\\" + NAME_DELIMITER + IDENTIFIER_REGEX)))
     		 category = "subroutine";
+    	 else if (identifier.matches(IDENTIFIER_REGEX))
+    		 category = "class";
     	 else{
     		 category = symbolTable.kindOf(identifier);
     		 runningIndex = symbolTable.indexOf(identifier);

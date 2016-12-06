@@ -7,10 +7,13 @@ import java.io.IOException;
  * Created by hadas on 29/11/2016.
  */
 public class CompilationEngine{
+	private static final String IDENTIFIER_REGEX = "([^\\d]\\w*)";
+	private static final String CLASS_REGEX = "^[^\\d]\\w*";
+	private static final String METHOD_REGEX = IDENTIFIER_REGEX + "\\." + IDENTIFIER_REGEX;
 	private static final String CONST = "constant", ARG = "argument", LOCAL = "local",
-			STATIC = "static", THIS = "this", THAT = "that", POINTER = "pointer", TEMP = "temp",
-			ADD = "add", SUB = "sub", NEG = "neg", EQ = "eq", GT = "gt", LT = "lt", AND = "and",
-			OR = "or", NOT = "not";
+			STATIC = "static", FIELD = "field", THIS = "this", THAT = "that", POINTER = "pointer",
+			TEMP = "temp",	ADD = "add", SUB = "sub", NEG = "neg", EQ = "eq", GT = "gt", LT = "lt",
+			AND = "and",   OR = "or", NOT = "not";
     private static final String ILLEGAL_FILE_FORMAT= "File not in Jack format", COMMA = ",", END_OF_STATEMENT=";",
             END_OF_BLOCK = "\\}", BLOCK_BEGINNING = "\\{", ARRAY_OPENER="\\[", ARRAY_CLOSER = "\\]",
             PARENTHESIS_LEFT = "\\(", PARENTHESIS_RIGHT = "\\)", PRIMITIVE_TYPES = "int|boolean|char",
@@ -18,8 +21,8 @@ public class CompilationEngine{
             STATEMENTS_TYPES = "let|if|while|do|return", OP = "\\+|\\-|\\*|\\/|\\&amp;|\\||\\&lt;|\\&gt;|\\=",
             UNARY_OP = "-|~";
     private static final String WHILE_START = "WHILE_EXP",  WHILE_END = "WHILE_END",
-    		IF_COND = "IF_TRUE", ELSE_COND = "IF_FALSE", IF_END = "IF_END";
-    private int whileCounter = 0, ifCounter = 0, elseCounter = 0;
+    		IF_COND = "IF_TRUE", ELSE_COND = "IF_FALSE";
+    private int whileCounter = 0, ifCounter = 0;
     private VMWriter writer;
     private SymbolTable symbolTable;
     private JackTokenizer tokenizer;
@@ -152,7 +155,8 @@ public class CompilationEngine{
             advance();
         }
     }
-    private void compileSubroutineBody(String name) throws IOException, IllegalTokenException {
+    private void compileSubroutineBody(String name, String funcType) throws IOException,
+    IllegalTokenException {
         writer.beginBlock("subroutineBody");
         advance();
         if (!checkNextSymbol(BLOCK_BEGINNING)) {
@@ -161,6 +165,19 @@ public class CompilationEngine{
         writer.writeToken(tokenizer);
         compileVarDec();
         writer.writeFunction(name, symbolTable.varCount(SymbolTable.VarKind.VAR));
+        // Handle method: set the base address of this to the given object
+        if (funcType.equals("method")){
+        	writer.writePush(ARG, "0");
+        	writer.writePop(POINTER, "0");
+        }
+        // Handle constructor: Allocate new memory space for object
+        if (funcType.equals("constructor"))
+        {
+        	int fieldCount = symbolTable.varCount(SymbolTable.VarKind.FIELD);
+        	writer.writePush(CONST, Integer.toString(fieldCount));
+        	writer.writeCall("Memory.alloc", 1);
+        	writer.writePop(POINTER, "0");
+        }
        // advance();
         if (!checkNextSymbol(END_OF_BLOCK)) {
             compileStatements();
@@ -177,13 +194,15 @@ public class CompilationEngine{
             return;
         }
         symbolTable.startSubroutine();
+        ifCounter = 0;
+        whileCounter = 0;
         writer.beginBlock("subroutineDec");
+        String funcType = tokenizer.getToken();
         writer.writeToken(tokenizer);
         advance();
         if (!checkNextKeyword("void")) {
             checkType();
-        }
-        String type = tokenizer.getToken();
+        } 
         writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
@@ -204,7 +223,7 @@ public class CompilationEngine{
         }
         writer.endBlock("parameterList");
         writer.writeToken(tokenizer);
-        compileSubroutineBody(name);
+        compileSubroutineBody(name, funcType);
         advance();
         writer.endBlock("subroutineDec");
         compileSubroutine();
@@ -319,6 +338,7 @@ public class CompilationEngine{
         String name = tokenizer.getToken();
         String kind = null;
         String index = null;
+        boolean isArray = false;
         writer.writeIdentifier(name, "used", tokenizer);
         advance();
         if (!checkNextSymbol(ARRAY_OPENER)) {
@@ -327,12 +347,32 @@ public class CompilationEngine{
         }
         // array
         else {
+        	isArray = true;
+             if (symbolTable.typeOf(name).matches(CLASS_REGEX))
+         	{
+         		kind = symbolTable.kindOf(name);
+                 index = symbolTable.indexOf(name);
+                 if (kind.equals("variable")){
+                 	writer.writePush(LOCAL, index);
+                 }
+                 if (kind.equals(ARG)){
+                 	writer.writePush(ARG, index);;
+                 }
+                 if (kind.equals(STATIC)){
+                 	writer.writePush(STATIC, index);;
+                 }
+                 if (kind.equals(FIELD)){
+                 	writer.writePush(THIS, index);;
+                 }
+                 
+         	}
             writer.writeToken(tokenizer);
             advance();
             compileExpression();
             if (!checkNextSymbol(ARRAY_CLOSER)) {
                 throw new IllegalTokenException(tokenizer.getToken());
             }
+            writer.writeArithmetic("+");
             writer.writeToken(tokenizer);
             advance();
             if(!checkNextSymbol("="))
@@ -346,16 +386,29 @@ public class CompilationEngine{
         }
 
         writer.writeToken(tokenizer);
-        kind = symbolTable.kindOf(name);
-        index = symbolTable.indexOf(name);
-        if (kind.equals("variable")){
-        	writer.writePop(LOCAL, index);
+        if (!isArray)
+        {
+	        kind = symbolTable.kindOf(name);
+	        index = symbolTable.indexOf(name);
+	        if (kind.equals("variable")){
+	        	writer.writePop(LOCAL, index);
+	        }
+	        if (kind.equals(ARG)){
+	        	writer.writePop(ARG, index);;
+	        }
+	        if (kind.equals(STATIC)){
+	        	writer.writePop(STATIC, index);;
+	        }
+	        if (kind.equals(FIELD)){
+	        	writer.writePop(THIS, index);;
+	        }
         }
-        if (kind.equals(ARG)){
-        	writer.writePop(ARG, index);;
-        }
-        if (kind.equals(STATIC)){
-        	writer.writePop(STATIC, index);;
+        // Pop to array is handled differently
+        else{
+        	writer.writePop(TEMP, "0");
+        	writer.writePop(POINTER, "1");
+        	writer.writePush(TEMP, "0");
+        	writer.writePop(THAT, "0");
         }
         writer.endBlock("letStatement");
     }
@@ -363,7 +416,8 @@ public class CompilationEngine{
     public void compileWhile() throws IllegalTokenException, IOException{
         writer.beginBlock("whileStatement");
         writer.writeToken(tokenizer);
-        writer.writeLabel(WHILE_START, Integer.toString(whileCounter));
+        int localCount = whileCounter++;
+        writer.writeLabel(WHILE_START, Integer.toString(localCount));
         advance();
         if(!checkNextSymbol(PARENTHESIS_LEFT))
             throw new IllegalTokenException(tokenizer.getToken());
@@ -374,12 +428,10 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         writer.writeToken(tokenizer);
         writer.writeArithmetic("~");
-        writer.writeIf(WHILE_END, Integer.toString(whileCounter));
-        whileCounter++;
+        writer.writeIf(WHILE_END, Integer.toString(localCount));
         checkConditionBody();
-        whileCounter--;
-        writer.writeGoto(WHILE_START, Integer.toString(whileCounter));
-        writer.writeLabel(WHILE_END, Integer.toString(whileCounter));
+        writer.writeGoto(WHILE_START, Integer.toString(localCount));
+        writer.writeLabel(WHILE_END, Integer.toString(localCount));
         writer.endBlock("whileStatement");
     }
     public void compileReturn() throws IOException, IllegalTokenException{
@@ -415,24 +467,20 @@ public class CompilationEngine{
         if(!checkNextSymbol(PARENTHESIS_RIGHT)){
             throw new IllegalTokenException(tokenizer.getToken());
         }
+        int localCount = ifCounter++;
         writer.writeToken(tokenizer);
-        writer.writeIf(IF_COND, Integer.toString(ifCounter));
-        writer.writeGoto(ELSE_COND, Integer.toString(ifCounter));
-        writer.writeLabel(IF_COND, Integer.toString(ifCounter));
-        ifCounter++;
+        writer.writeIf(IF_COND, Integer.toString(localCount));
+        writer.writeGoto(ELSE_COND, Integer.toString(localCount));
+        writer.writeLabel(IF_COND, Integer.toString(localCount));
         checkConditionBody();
-        ifCounter--;
-        writer.writeGoto(IF_END, Integer.toString(ifCounter));
         advance();
         if(checkNextKeyword("else")){
             writer.writeToken(tokenizer);
-            writer.writeLabel(ELSE_COND, Integer.toString(ifCounter));
-            elseCounter++;
+            writer.writeLabel(ELSE_COND, Integer.toString(localCount));
             checkConditionBody();
-            elseCounter--;
             advance();
         }
-        writer.writeLabel(IF_END, Integer.toString(ifCounter));
+        writer.writeLabel(ELSE_COND, Integer.toString(localCount));
         writer.endBlock("ifStatement");
     }
     public void compileExpression() throws IOException, IllegalTokenException {
@@ -452,12 +500,23 @@ public class CompilationEngine{
         writer.endBlock("expression");
         return;
     }
-    public void compileTerm() throws IOException, IllegalTokenException {
+    
+    void compileTerm() throws IOException, IllegalTokenException {
         writer.beginBlock("term");
         JackTokenizer.TokenType type = tokenizer.tokenType();
         switch (type) {
             case STRING_CONST:
                 writer.writeToken(tokenizer);
+                String string = tokenizer.getToken();
+                int length = string.length();
+                writer.writePush(CONST, Integer.toString(length));
+                writer.writeCall("String.new", 1);
+                int asciiVal = 0;
+                for (int i = 0; i < length; i++){
+                	asciiVal = (int) string.charAt(i);
+                	writer.writePush(CONST, Integer.toString(asciiVal));
+                	writer.writeCall("String.appendChar", 2);
+                }
                 advance();
                 break;
             case INT_CONST:
@@ -477,6 +536,8 @@ public class CompilationEngine{
                 }
                 if (value.matches("false|null"))
                 	writer.writePush(CONST, "0");
+                if (value.matches(THIS))
+                	writer.writePush(POINTER, "0");
                 advance();
                 break;
             case SYMBOL:
@@ -515,6 +576,9 @@ public class CompilationEngine{
                             throw new IllegalTokenException(tokenizer.getToken());
                         }
                         writer.writeToken(tokenizer);
+                        writer.writeArithmetic("+");
+                        writer.writePop(POINTER, "1");
+                        writer.writePush(THAT, "0");
                         advance();
                         break;
                     }
@@ -531,8 +595,17 @@ public class CompilationEngine{
         String name = tokenizer.getToken();
         String kind = symbolTable.kindOf(name);
         String index = symbolTable.indexOf(name);
+        String type = symbolTable.typeOf(name);
+        int nArgs = 0;
         advance();
+        /**
+         *  Check regular vars - not methods.
+         */
         if (!checkNextSymbol("\\(|\\.")) {
+        	 if (symbolTable.typeOf(name).matches(CLASS_REGEX))
+          	{
+        		 
+          	}
         	writer.writeIdentifier(name, "used", tokenizer);
         	if (kind.equals("variable"))
         		writer.writePush(LOCAL, index);
@@ -540,12 +613,30 @@ public class CompilationEngine{
         		writer.writePush(ARG, index);
         	if (kind.equals(STATIC))
         		writer.writePush(STATIC, index);
+        	if (kind.equals(FIELD))
+        		writer.writePush(THIS, index);
             return false;
         }
         if (tokenizer.symbol().equals(".")){
                 advance();
                 checkNextIdentifier();
-                name = name + "." + tokenizer.getToken();
+                
+                // handle object method call
+                if (!symbolTable.typeOf(name).matches(PRIMITIVE_TYPES+"|none")){
+                	name = symbolTable.typeOf(name) + "." + tokenizer.getToken();
+                	if (kind.equals("variable"))
+                 		writer.writePush(LOCAL, index);
+                 	if (kind.equals(ARG))
+                 		writer.writePush(ARG, index);
+                 	if (kind.equals(STATIC))
+                 		writer.writePush(STATIC, index);
+                 	if (kind.equals(FIELD))
+                		writer.writePush(THIS, index);
+                 	nArgs++;
+                }
+                else{
+                	name = name + "." + tokenizer.getToken();
+                }
                 writer.writeIdentifier(name, "used", tokenizer);
                 advance();
                 if (!checkNextSymbol(PARENTHESIS_LEFT)) {
@@ -553,9 +644,18 @@ public class CompilationEngine{
                 }
                 writer.writeToken(tokenizer);
         }
+        
+        // It's a method
+        if (!name.matches(METHOD_REGEX)){
+        	name = tokenizer.getClassName() + "." + name;
+        	writer.writePush(POINTER, "0");
+        	nArgs++;
+        }
+        
         writer.beginBlock("expressionList");
         advance();
-        int nArgs = 0;
+        
+        
         if (!checkNextSymbol(PARENTHESIS_RIGHT)) {
             nArgs = compileExpressionList();
         }
@@ -564,6 +664,8 @@ public class CompilationEngine{
             throw new IllegalTokenException(tokenizer.getToken());
         }
         writer.writeToken(tokenizer);
+        
+        // pass this object to the method
         writer.writeCall(name, nArgs);
         advance();
         return true;
