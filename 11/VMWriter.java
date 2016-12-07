@@ -5,14 +5,10 @@ import java.io.PrintWriter;
  * Created by hadas on 28/11/2016.
  */
 public class VMWriter {
-	private static final String CONST = "constant", ARG = "argument", LOCAL = "local",
-			STATIC = "static", THIS = "this", THAT = "that", POINTER = "pointer", TEMP = "temp",
-			ADD = "add", SUB = "sub", NEG = "neg", EQ = "eq", GT = "gt", LT = "lt", AND = "and",
-			OR = "or", NOT = "not";
+	private static final String ADD = "add", SUB = "sub", NEG = "neg", EQ = "eq", GT = "gt",
+			LT = "lt", AND = "and",	 OR = "or", NOT = "not";
 	private static final String NAME_DELIMITER = ".";
 	private static final String IDENTIFIER_REGEX = "([^\\d]\\w*)";
-	private static final String CLASS_REGEX = "[^\\d]\\w*";
-	private static final String METHOD_REGEX = IDENTIFIER_REGEX + "\\." + IDENTIFIER_REGEX;
     private static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
             CLOSER = ">", WHITESPACE = "  ";
     private static final int WHITESPACE_LENGTH = 2;
@@ -67,13 +63,15 @@ public class VMWriter {
 		default:
 			break;
         }
-        writer.println(space + OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
+        writer.println(space + OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +
+        		WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
     }
     
     // Use the symbol table to extend identifier
     public void writeIdentifier(String identifier, String varState, JackTokenizer tokenizer){
     	 writer.println(space + OPENER_LEFT + "identifier" + CLOSER);
-    	 writer.println(space + OPENER_LEFT + "name" + CLOSER +WHITESPACE+ identifier +WHITESPACE+OPENER_RIGHT+"name" + CLOSER);
+    	 writer.println(space + OPENER_LEFT + "name" + CLOSER +WHITESPACE+ identifier +WHITESPACE+
+    			 OPENER_RIGHT+"name" + CLOSER);
     	 //String className = tokenizer.getClassName();
     	 String category = null;
     	 String runningIndex = null;
@@ -84,11 +82,13 @@ public class VMWriter {
     	 else{
     		 category = symbolTable.kindOf(identifier);
     		 runningIndex = symbolTable.indexOf(identifier);
-    		 writer.println(space + OPENER_LEFT + "index" + CLOSER +WHITESPACE+ runningIndex +WHITESPACE+OPENER_RIGHT+ "index" + CLOSER);
+    		 writer.println(space + OPENER_LEFT + "index" + CLOSER +WHITESPACE+ runningIndex +
+    				 WHITESPACE+OPENER_RIGHT+ "index" + CLOSER);
     	 } 
-    	 writer.println(space + OPENER_LEFT + "category" + CLOSER +WHITESPACE+ category +WHITESPACE+OPENER_RIGHT+ "category" + CLOSER);
-    	 // TODO: Handle used variables in expressions
-    	 writer.println(space + OPENER_LEFT + "state" + CLOSER +WHITESPACE+ varState +WHITESPACE+OPENER_RIGHT+ "state" + CLOSER);
+    	 writer.println(space + OPENER_LEFT + "category" + CLOSER +WHITESPACE+ category +
+    			 WHITESPACE+OPENER_RIGHT+ "category" + CLOSER);
+    	 writer.println(space + OPENER_LEFT + "state" + CLOSER +WHITESPACE+ varState +
+    			 WHITESPACE+OPENER_RIGHT+ "state" + CLOSER);
     	 writer.println(space + OPENER_RIGHT+ "identifier" + CLOSER);
     }
     

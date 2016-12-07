@@ -13,12 +13,16 @@ public class JackTokenizer {
 
     public enum TokenType{KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST}
     private static final String NAME_DELIMITER = ".";
-    private static final String WHITESPACE = "\\s*", COMMENT_REGEX = "\\/\\/.*|\\/\\*.*|\\/\\*\\*.*|.*\\*\\/",
+    private static final String WHITESPACE = "\\s*",
+    		COMMENT_REGEX = "\\/\\/.*|\\/\\*.*|\\/\\*\\*.*|.*\\*\\/",
    // COMMENT_HALF_LINE = "((\\/\\*\\*|\\/\\*).*\\*\\/)",
-    KEYWORD_REGEX="(class|constructor|function|method|field|static|var|int|char|boolean|void|true|false|null|" +
-            "this|let|do|if|else|while|return)", SYMBOL_REGEX = "\\{|\\}|\\(|\\)|\\[|\\]|\\.|\\," +
+    KEYWORD_REGEX="(class|constructor|function|method|field|static|var|int|char|"
+    		+ "boolean|void|true|false|null|" +
+            "this|let|do|if|else|while|return)",
+            SYMBOL_REGEX = "\\{|\\}|\\(|\\)|\\[|\\]|\\.|\\," +
             "|\\;|\\+|\\-|\\*|\\/|\\&|\\||\\<|\\>|\\=|\\~",
-            IDENTIFIER_REGEX = "([^\\d]\\w*)" + "(\\.[^\\d]\\w*)?" , INT_REGEX= "\\d+", STRING_REGEX = "[^\\\"\\n]*";
+            IDENTIFIER_REGEX = "([^\\d]\\w*)" + "(\\.[^\\d]\\w*)?" ,
+            INT_REGEX= "\\d+", STRING_REGEX = "[^\\\"\\n]*";
     private BufferedReader fileReader;
     private String currToken, currLine;
     private String className;
@@ -27,7 +31,8 @@ public class JackTokenizer {
         this.fileReader = new BufferedReader(new FileReader(inputFile));
         currLine = fileReader.readLine();
         currToken = "";
-        className = inputFile.getName().substring(0, inputFile.getName().indexOf((NAME_DELIMITER)));
+        className = inputFile.getName().substring(0,
+        		inputFile.getName().indexOf((NAME_DELIMITER)));
        // advance(); //do we need it?
     }
     
@@ -56,9 +61,6 @@ public class JackTokenizer {
 
     public boolean checkComment() throws IOException
     {
-        /**TODO: take care of comments of this form
-         *
-         */
         Pattern commentPattern = Pattern.compile("\\/\\*\\*.*");
         Matcher commentMatcher = commentPattern.matcher(currLine);
         if (commentMatcher.find()) {

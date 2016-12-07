@@ -12,16 +12,20 @@ public class CompilationEngine{
 	private static final String METHOD_REGEX = IDENTIFIER_REGEX + "\\." + IDENTIFIER_REGEX;
 	private static final String CONST = "constant", ARG = "argument", LOCAL = "local",
 			STATIC = "static", FIELD = "field", THIS = "this", THAT = "that", POINTER = "pointer",
-			TEMP = "temp",	ADD = "add", SUB = "sub", NEG = "neg", EQ = "eq", GT = "gt", LT = "lt",
-			AND = "and",   OR = "or", NOT = "not";
-    private static final String ILLEGAL_FILE_FORMAT= "File not in Jack format", COMMA = ",", END_OF_STATEMENT=";",
-            END_OF_BLOCK = "\\}", BLOCK_BEGINNING = "\\{", ARRAY_OPENER="\\[", ARRAY_CLOSER = "\\]",
-            PARENTHESIS_LEFT = "\\(", PARENTHESIS_RIGHT = "\\)", PRIMITIVE_TYPES = "int|boolean|char",
-            CLASS_VAR_TYPE = "static|field", SUBROUTINE_TYPE = "constructor|function|method",
-            STATEMENTS_TYPES = "let|if|while|do|return", OP = "\\+|\\-|\\*|\\/|\\&amp;|\\||\\&lt;|\\&gt;|\\=",
+			TEMP = "temp";
+    private static final String ILLEGAL_FILE_FORMAT= "File not in Jack format", COMMA = ",",
+    		END_OF_STATEMENT=";",
+            END_OF_BLOCK = "\\}", BLOCK_BEGINNING = "\\{", ARRAY_OPENER="\\[",
+            ARRAY_CLOSER = "\\]",
+            PARENTHESIS_LEFT = "\\(", PARENTHESIS_RIGHT = "\\)",
+            PRIMITIVE_TYPES = "int|boolean|char",
+            CLASS_VAR_TYPE = "static|field",
+            SUBROUTINE_TYPE = "constructor|function|method",
+            STATEMENTS_TYPES = "let|if|while|do|return",
+            OP = "\\+|\\-|\\*|\\/|\\&amp;|\\||\\&lt;|\\&gt;|\\=",
             UNARY_OP = "-|~";
     private static final String WHILE_START = "WHILE_EXP",  WHILE_END = "WHILE_END",
-    		IF_COND = "IF_TRUE", ELSE_COND = "IF_FALSE";
+    		IF_COND = "IF_TRUE", ELSE_COND = "IF_FALSE", END_COND = "IF_END";
     private int whileCounter = 0, ifCounter = 0;
     private VMWriter writer;
     private SymbolTable symbolTable;
@@ -60,9 +64,11 @@ public class CompilationEngine{
             throw new IllegalTokenException(token);
         }
     }
-    private boolean checkNextSymbol(String symbol) throws IOException, IllegalTokenException{
+    private boolean checkNextSymbol(String symbol) throws IOException,
+    IllegalTokenException{
         JackTokenizer.TokenType type = tokenizer.tokenType();
-        if (type == null || type != JackTokenizer.TokenType.SYMBOL || !tokenizer.symbol().matches(symbol)) {
+        if (type == null || type != JackTokenizer.TokenType.SYMBOL || 
+        		!tokenizer.symbol().matches(symbol)) {
             return false;
         }
         return true;
@@ -94,7 +100,8 @@ public class CompilationEngine{
         }
         writer.writeToken(tokenizer);
         advance();
-        while (tokenizer.hasMoreTokens() && (tokenizer.checkComment() || tokenizer.checkEmpty()));
+        while (tokenizer.hasMoreTokens() && (tokenizer.checkComment() || 
+        		tokenizer.checkEmpty()));
         if (tokenizer.hasMoreTokens()) {
             throw new IllegalArgumentException(ILLEGAL_FILE_FORMAT);
         }
@@ -203,6 +210,8 @@ public class CompilationEngine{
         if (!checkNextKeyword("void")) {
             checkType();
         } 
+        if (funcType.equals("method"))
+        	symbolTable.setMethodBaseIndex();
         writer.writeToken(tokenizer);
         advance();
         checkNextIdentifier();
@@ -457,6 +466,7 @@ public class CompilationEngine{
     public void compileIf() throws IOException, IllegalTokenException {
         writer.beginBlock("ifStatement");
         writer.writeToken(tokenizer);
+        boolean hasElse = false;
         advance();
         if(!checkNextSymbol(PARENTHESIS_LEFT)){
             throw new IllegalTokenException(tokenizer.getToken());
@@ -475,12 +485,17 @@ public class CompilationEngine{
         checkConditionBody();
         advance();
         if(checkNextKeyword("else")){
+        	hasElse = true;
+        	writer.writeGoto(END_COND, Integer.toString(localCount));
             writer.writeToken(tokenizer);
             writer.writeLabel(ELSE_COND, Integer.toString(localCount));
             checkConditionBody();
             advance();
         }
-        writer.writeLabel(ELSE_COND, Integer.toString(localCount));
+        if(hasElse)
+        	writer.writeLabel(END_COND, Integer.toString(localCount));
+        else
+        	writer.writeLabel(ELSE_COND, Integer.toString(localCount));
         writer.endBlock("ifStatement");
     }
     public void compileExpression() throws IOException, IllegalTokenException {
@@ -595,7 +610,6 @@ public class CompilationEngine{
         String name = tokenizer.getToken();
         String kind = symbolTable.kindOf(name);
         String index = symbolTable.indexOf(name);
-        String type = symbolTable.typeOf(name);
         int nArgs = 0;
         advance();
         /**
@@ -635,7 +649,7 @@ public class CompilationEngine{
                  	nArgs++;
                 }
                 else{
-                	name = name + "." + tokenizer.getToken();
+                	name = name + "." + tokenizer.getToken();	
                 }
                 writer.writeIdentifier(name, "used", tokenizer);
                 advance();
@@ -645,10 +659,10 @@ public class CompilationEngine{
                 writer.writeToken(tokenizer);
         }
         
-        // It's a method
+        // It's a method from this class
         if (!name.matches(METHOD_REGEX)){
-        	name = tokenizer.getClassName() + "." + name;
         	writer.writePush(POINTER, "0");
+        	name = tokenizer.getClassName() + "." + name;
         	nArgs++;
         }
         
@@ -657,8 +671,10 @@ public class CompilationEngine{
         
         
         if (!checkNextSymbol(PARENTHESIS_RIGHT)) {
-            nArgs = compileExpressionList();
+            nArgs += compileExpressionList();
         }
+        
+        
         writer.endBlock("expressionList");
         if (!checkNextSymbol(PARENTHESIS_RIGHT)) {
             throw new IllegalTokenException(tokenizer.getToken());

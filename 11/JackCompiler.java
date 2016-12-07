@@ -13,13 +13,15 @@ public class JackCompiler {
     		throws FileNotFoundException, IOException, IllegalTokenException 
     {
         String fileName = inputFile.getAbsolutePath();
-        String fileSuffix = fileName.substring(fileName.lastIndexOf(NAME_DELIMITER)+1, fileName.length());
+        String fileSuffix = fileName.substring(fileName.lastIndexOf(NAME_DELIMITER)+1,
+        		fileName.length());
         if (fileSuffix.equals(IN_SUFFIX)) {
             String outFileName;
             outFileName = fileName.substring(0,
                     fileName.indexOf(NAME_DELIMITER)) + NAME_DELIMITER + OUT_SUFFIX;
             SymbolTable symbolTable = new SymbolTable();
-            CompilationEngine compiler = new CompilationEngine(inputFile, outFileName, symbolTable);
+            CompilationEngine compiler = new CompilationEngine(inputFile,
+            		outFileName, symbolTable);
             compiler.compileClass();
         }  
     }

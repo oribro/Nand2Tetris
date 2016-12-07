@@ -124,5 +124,11 @@ public class SymbolTable {
 		return "none";
 	}
 	
+	// the object "this" is placed at 0 index
+	public void setMethodBaseIndex()
+	{
+		argRunningIndex++;
+	}
+	
 	
 }
