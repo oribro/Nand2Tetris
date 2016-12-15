@@ -11,21 +11,29 @@
  * string-oriented operations.
  */
 class String {
-	
 	field Array string;
 	field int length;
+	static boolean isNeg;
 	
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
+    	if (~(maxLength > 0)){
+    		let string = null;
+    		let length = 0;
+    	}
+    	else {
     	let string = Array.new(maxLength);
     	let length = 0;
+    	}
     	return this;
     }
 
     /** Disposes this string. */
-    method void dispose() {
-    	do string.dispose();
+    method void dispose(){
+    	if (~(string = null) ){
+    		do string.dispose();
+    	}
       	return;
     }
 
@@ -77,26 +85,41 @@ class String {
     	var int i;
     	let value = 0;
     	let i = 0;
+    	if (charAt(0) = 45){
+    		let isNeg = true;
+    		let i = 1;
+    	}
     	while (i < length){
     		let digit = string[i] - 48;
     		let value = (value * 10) + digit;
     		let i = i + 1;
     	}
+    	if (isNeg){
+    		let value = -value;
+    		let isNeg = false;
+    	}
     	return value;
     }
-
+	
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
     	var int lastDigit;
     	var int c;
+    	let length = 0;
     	if (val < 0){
-    		return;
+    		let isNeg = true;
+    		let val = Math.abs(val);
     	}
+    	
   	// a%b = a - (a/b)*b
     	let lastDigit = val - ((val/10)*10);
     	let c = lastDigit + 48;
     	if (val < 10){
+    		if (isNeg){
+    			do appendChar(45);
+    		}
     		do appendChar(c);
+    		let isNeg = false;
     		return;
     	}
     	do setInt(val/10);
@@ -118,4 +141,5 @@ class String {
     function char doubleQuote() {
     	return 34;
     }
+    
 }
