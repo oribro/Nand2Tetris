@@ -10,11 +10,12 @@ import java.util.regex.Pattern;
 public class Parser {
 	
 	private static final String WHITESPACE = "\\s*";
+	private static final String NAME_REGEX = "([^\\d](\\w|\\.|\\:|\\_|\\$)+)";
 	private static final String COMMENT_REGEX = "(//+.*)";
-	private static final String LABEL_REGEX = WHITESPACE + "\\((.+)\\)" +
+	private static final String LABEL_REGEX = WHITESPACE + "\\(" + WHITESPACE + NAME_REGEX + WHITESPACE + "\\)" +
 								WHITESPACE + COMMENT_REGEX + "?";
 	private static final String NON_SYMBOL_REGEX = "\\d+";
-	private static final String A_INSTRUCTION_REGEX = WHITESPACE + "@(\\S+)" +
+	private static final String A_INSTRUCTION_REGEX = WHITESPACE + "@" + WHITESPACE + NAME_REGEX +
 								WHITESPACE + COMMENT_REGEX + "?";
 	private static final String DEST_REGEX = "(M|D|MD|A|AM|AD|AMD)?";
 	private static final String COMP_REGEX = "(0|1|-1|D|A|!D|!A|-D|-A|D\\+1" +
