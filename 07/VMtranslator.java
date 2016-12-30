@@ -38,7 +38,6 @@ public class VMtranslator {
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		try{
-
 			File inputFile = new File(args[0]);
 			CodeWriter asmWriter = null;
 			if (inputFile.isFile())

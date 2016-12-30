@@ -309,9 +309,8 @@ public class CodeWriter {
 			}
 			case "static":
 			{
-				String curFuncName = parser.getCurrFunctionName();
-				writer.println("@" + curFuncName.substring(0,
-						curFuncName.lastIndexOf(NAME_DELIMITER)+1) + value);
+				String curFileName = command.getNewName();
+				writer.println("@" + curFileName + value);
 				writer.println("D=M");
 				pushUpdater();
 				break;
@@ -371,9 +370,8 @@ public class CodeWriter {
 			}
 			case "static":
 			{
-				String curFuncName = parser.getCurrFunctionName();
-				writer.println("@" + curFuncName.substring(0,
-						curFuncName.lastIndexOf(NAME_DELIMITER)+1) + value);
+				String curFileName = command.getNewName();
+				writer.println("@" + curFileName + value);
 				writer.println("D=A");
 				setValueAtAddress();
 				break;
@@ -387,7 +385,7 @@ public class CodeWriter {
 		writeLabel(new C_Label(command.getFirstArg() + "$BEGIN"));
 		int argsNum = command.getSecondArg();
 		for (int i=1; i <= argsNum; i++)
-			writePush(new C_Push("constant", 0), parser);
+			writePush(new C_Push("constant", 0, null), parser);
 	}
 
 	private void writeCall(C_Call command)
@@ -445,7 +443,7 @@ public class CodeWriter {
 		writer.println("D=M");
 		writer.println("@R14");
 		writer.println("M=D");
-		writePop(new C_Pop("argument", 0), parser); // *ARG=pop()
+		writePop(new C_Pop("argument", 0, null), parser); // *ARG=pop()
 		writer.println("@R2");      //SP=ARG+1
 		writer.println("D=M");
 		writer.println("@SP");

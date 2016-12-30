@@ -1,18 +1,17 @@
-package ex8;
 
-import java.io.PrintWriter;
 
 /**
  * Created by hadas on 16/11/2016.
  */
-public class C_If extends VMCommand {
-    public String getFirstArg() {
-        return "";
+public class C_If extends C_Goto {
+    public C_If(String labelName) {
+        super(labelName);
     }
-    public int getSecondArg() {
-        return 0;
-    }
-    public void translateToAsm(PrintWriter writer, Memory memory) {
-
-    }
+    
+	@Override
+	public String getCommand() {
+		// TODO Auto-generated method stub
+		return "if-goto";
+	}
+    
 }
