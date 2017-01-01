@@ -110,10 +110,11 @@ public class Parser {
 			matcher = pattern.matcher(currentLine);
 			if (matcher.matches()) {
 				String segment = matcher.group(1);
-				if (segment.matches("static"))
+				if (segment.matches("static")){
 					writer.println("pop " + segment + " " + getFileName() + matcher.group(4));
-				advance();
-				continue;
+					advance();
+					continue;
+				}
 			}
 			pattern = Pattern.compile(C_FUNCTION_REGEX);
 			matcher = pattern.matcher(currentLine);
