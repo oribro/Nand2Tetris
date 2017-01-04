@@ -4,31 +4,65 @@
 // File name: projects/12/Memory.jack
 
 /**
- * This library provides two services: direct access to the computer's main
- * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
- * consists of 32,768 words, each holding a 16-bit binary number.
+ * Memory operations library.
  */ 
 class Memory {
+	static Array ram;
+	static Array heap;
+	static int lastPointerIndex;
 
-    /** Initializes the class. */
+    /** Initializes memory parameters. */
     function void init() {
+		let ram=0;
+		let heap = 2048;
+		let lastPointerIndex = 0;
+		let heap[0]= 0;
+		let heap[1] = 14335;
+		return;
     }
 
-    /** Returns the RAM value at the given address. */
+    /** Returns the value of the main memory at the given address. */
     function int peek(int address) {
-    }
+    	return ram[address];
+	}
 
-    /** Sets the RAM value at the given address to the given value. */
+    /** Sets the value of the main memory at this address
+     *  to the given value. */
     function void poke(int address, int value) {
-    }
+		let ram[address] = value;
+		return; 
+	}
 
-    /** Finds an available RAM block of the given size and returns
-     *  a reference to its base address. */
+    /** finds and allocates from the heap a memory block of the 
+     *  specified size and returns a reference to its base address. */
     function int alloc(int size) {
+		var int i, block, prevI, newSize;
+		let i=0;
+		let prevI=0;
+		while (true) {
+			if (heap[i+1] < (size+2)) {
+				if (i = lastPointerIndex) {
+					return -1; //error code
+				}
+				let prevI = i;
+				let i = heap[i];
+			}
+			else {
+				let newSize = heap[i+1] - (size+2); //new size of the block we took from.
+				let heap[i+1] = newSize; //update size of the block we took from.
+				let block = prevI+newSize; //base address of allocated block.
+				let heap[block+1] = size; 				
+				return block + 2048+2;
+			}
+		}
+		return block + 2048 +2;
+				
     }
 
-    /** De-allocates the given object (cast as an array) by making
-     *  it available for future allocations. */
-    function void deAlloc(Array o) {
-    }    
+    /** De-allocates the given object and frees its space. */
+    function void deAlloc(int object) {
+		let heap[lastPointerIndex] = object-2048-2;
+		let lastPointerIndex = object-2048-2;
+		return;	    
+	}    
 }
