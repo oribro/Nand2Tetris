@@ -1,4 +1,3 @@
-package ex10;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -45,7 +44,7 @@ public class JackTokenizer {
 
     public boolean checkComment() throws IOException
     {
-        Pattern commentPattern = Pattern.compile("\\/\\*\\*.*");
+        Pattern commentPattern = Pattern.compile("\\/\\*\\*.*|\\/\\*.*");
         Matcher commentMatcher = commentPattern.matcher(currLine);
         if (commentMatcher.find()) {
             Matcher closeComment = Pattern.compile("\\s*\\*\\/\\s*").matcher(currLine);
@@ -56,6 +55,7 @@ public class JackTokenizer {
             currLine = currLine.substring(closeComment.end(), currLine.length());
             return true;
         }
+     
         if (currLine.matches(WHITESPACE + COMMENT_REGEX))
         {
             currLine = fileReader.readLine();

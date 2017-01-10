@@ -1,5 +1,3 @@
-package ex10;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
@@ -54,6 +52,7 @@ public class XmlWriter {
                 terminal = tokenizer.getToken();
                 break;
         }
-        writer.println(space + OPENER_LEFT + typeString + CLOSER +WHITESPACE+ terminal +WHITESPACE+OPENER_RIGHT+typeString + CLOSER);
+        writer.println(space + OPENER_LEFT + typeString + CLOSER +" "+ terminal +
+        		" "+OPENER_RIGHT+typeString + CLOSER);
     }
 }
