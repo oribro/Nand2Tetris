@@ -1,3 +1,4 @@
+package ex10;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -134,7 +135,7 @@ public class CompilationEngine{
         }
         writer.writeToken(tokenizer);
         compileVarDec();
-       // advance();
+        // advance();
         if (!checkNextSymbol(END_OF_BLOCK)) {
             compileStatements();
             if (!checkNextSymbol(END_OF_BLOCK)) {
@@ -439,14 +440,14 @@ public class CompilationEngine{
         }
         writer.writeToken(tokenizer);
         if (tokenizer.symbol().equals(".")){
-                advance();
-                checkNextIdentifier();
-                writer.writeToken(tokenizer);
-                advance();
-                if (!checkNextSymbol(PARENTHESIS_LEFT)) {
-                    throw new IllegalTokenException(tokenizer.getToken());
-                }
-                writer.writeToken(tokenizer);
+            advance();
+            checkNextIdentifier();
+            writer.writeToken(tokenizer);
+            advance();
+            if (!checkNextSymbol(PARENTHESIS_LEFT)) {
+                throw new IllegalTokenException(tokenizer.getToken());
+            }
+            writer.writeToken(tokenizer);
         }
         writer.beginBlock("expressionList");
         advance();

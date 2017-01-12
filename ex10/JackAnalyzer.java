@@ -1,3 +1,4 @@
+package ex10;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,19 +10,19 @@ public class JackAnalyzer {
     private static final String IN_SUFFIX = "jack";
     private static final String OUT_SUFFIX = "xml";
     private static void translateFile(File inputFile)
-    		throws FileNotFoundException, IOException, IllegalTokenException
+            throws FileNotFoundException, IOException, IllegalTokenException
     {
-    	String fileName = inputFile.getAbsolutePath();
-    	String fileSuffix = fileName.substring(fileName.lastIndexOf(NAME_DELIMITER)+1, fileName.length());
-	    if (fileSuffix.equals(IN_SUFFIX)) {
-	        String outFileName;
-	        outFileName = fileName.substring(0,
-	                fileName.indexOf(NAME_DELIMITER)) + NAME_DELIMITER + OUT_SUFFIX;
-	        CompilationEngine compiler = new CompilationEngine(inputFile, outFileName);
-	        compiler.compileClass();
-	    }
+        String fileName = inputFile.getAbsolutePath();
+        String fileSuffix = fileName.substring(fileName.lastIndexOf(NAME_DELIMITER)+1, fileName.length());
+        if (fileSuffix.equals(IN_SUFFIX)) {
+            String outFileName;
+            outFileName = fileName.substring(0,
+                    fileName.indexOf(NAME_DELIMITER)) + NAME_DELIMITER + OUT_SUFFIX;
+            CompilationEngine compiler = new CompilationEngine(inputFile, outFileName);
+            compiler.compileClass();
+        }
     }
-    
+
     public static void main(String[] args) {
         try {
             File inputFile = new File(args[0]);
@@ -29,11 +30,11 @@ public class JackAnalyzer {
                 translateFile(inputFile);
             }
             if (inputFile.isDirectory()) {
-            	File[] dirFiles = inputFile.listFiles();
-				for (File file : dirFiles)
-				{
-					translateFile(file);
-				}
+                File[] dirFiles = inputFile.listFiles();
+                for (File file : dirFiles)
+                {
+                    translateFile(file);
+                }
             }
         }
         catch (IOException e) {

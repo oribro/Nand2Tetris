@@ -1,3 +1,4 @@
+package ex10;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
@@ -6,8 +7,8 @@ import java.io.PrintWriter;
  */
 public class XmlWriter {
     private static final String OPENER_LEFT = "<", OPENER_RIGHT = "</",
-            CLOSER = ">", WHITESPACE = "  ";
-    private static final int WHITESPACE_LENGTH = 2;
+            CLOSER = ">", WHITESPACE = "    ";
+    private static final int WHITESPACE_LENGTH = 4;
     private PrintWriter writer;
     private String space;
     public XmlWriter(String filename) throws FileNotFoundException{
@@ -53,6 +54,6 @@ public class XmlWriter {
                 break;
         }
         writer.println(space + OPENER_LEFT + typeString + CLOSER +" "+ terminal +
-        		" "+OPENER_RIGHT+typeString + CLOSER);
+                " "+OPENER_RIGHT+typeString + CLOSER);
     }
 }

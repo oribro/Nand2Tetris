@@ -1,3 +1,5 @@
+package ex10;
+
 /**
  * Created by hadas on 28/11/2016.
  */
