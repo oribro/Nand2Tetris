@@ -88,10 +88,9 @@ public class JackTokenizer {
             currLine = currLine.substring(1, currLine.length());
             currToken = currLine.substring(0, currLine.indexOf('"'));
             currLine = currLine.substring(currLine.indexOf('"')+1, currLine.length());
+            currToken = replaceSpecialSigns(currToken);
             isString = true;
-            //currLine = currLine.replaceFirst(currToken, "");
-            //currLine = currLine.replaceFirst("\"", "");
-           // currLine = currLine.replaceFirst("\"", "");
+          
             return;
         }
         Matcher matcher = Pattern.compile(SYMBOL_REGEX).matcher(currToken);
@@ -163,6 +162,22 @@ public class JackTokenizer {
             return "&amp;";
         }
         return currToken;
+    }
+    private String replaceSpecialSigns(String stringToken)
+    {
+        if (stringToken.indexOf("<") < stringToken.length()) {
+            stringToken.replaceAll("<", "&lt;");
+        }
+        if (stringToken.indexOf(">") < stringToken.length()) {
+            stringToken.replaceAll(">", "&gt;");
+        }
+        if (stringToken.indexOf("\"") < stringToken.length()) {
+            stringToken.replaceAll("\"", "&quot;");
+        }
+        if (stringToken.indexOf("&") < stringToken.length()) {
+            stringToken.replaceAll("&", "&amp;");
+        }
+        return stringToken;
     }
     public void close () throws IOException{ fileReader.close();}
 }
