@@ -1,4 +1,3 @@
-package ex10;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -165,17 +164,17 @@ public class JackTokenizer {
     }
     private String replaceSpecialSigns(String stringToken)
     {
-        if (stringToken.indexOf("<") < stringToken.length()) {
-            stringToken.replaceAll("<", "&lt;");
+        if (stringToken.contains("<")) {
+            stringToken = stringToken.replaceAll("<", "&lt;");
         }
-        if (stringToken.indexOf(">") < stringToken.length()) {
-            stringToken.replaceAll(">", "&gt;");
+        else if (stringToken.contains(">")) {
+        	stringToken = stringToken.replaceAll(">", "&gt;");
         }
-        if (stringToken.indexOf("\"") < stringToken.length()) {
-            stringToken.replaceAll("\"", "&quot;");
+        else if (stringToken.contains("\"")) {
+        	stringToken = stringToken.replaceAll("\"", "&quot;");
         }
-        if (stringToken.indexOf("&") < stringToken.length()) {
-            stringToken.replaceAll("&", "&amp;");
+        else if (stringToken.contains("&")) {
+        	stringToken = stringToken.replaceAll("&", "&amp;");
         }
         return stringToken;
     }
