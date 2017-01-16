@@ -14,7 +14,7 @@ public class JackTokenizer {
     public enum TokenType{KEYWORD, SYMBOL, IDENTIFIER, INT_CONST, STRING_CONST}
     private static final String NAME_DELIMITER = ".";
     private static final String WHITESPACE = "\\s*",
-    		COMMENT_REGEX = "\\/\\/.*|\\/\\*.*|\\/\\*\\*.*|.*\\*\\/",
+    		COMMENT_REGEX = "\\/\\/.*",
    // COMMENT_HALF_LINE = "((\\/\\*\\*|\\/\\*).*\\*\\/)",
     KEYWORD_REGEX="(class|constructor|function|method|field|static|var|int|char|"
     		+ "boolean|void|true|false|null|" +
@@ -26,11 +26,13 @@ public class JackTokenizer {
     private BufferedReader fileReader;
     private String currToken, currLine;
     private String className;
+    private boolean isString;
     
     public JackTokenizer(File inputFile) throws IOException{
         this.fileReader = new BufferedReader(new FileReader(inputFile));
         currLine = fileReader.readLine();
         currToken = "";
+	isString  = false;
         className = inputFile.getName().substring(0,
         		inputFile.getName().indexOf((NAME_DELIMITER)));
        // advance(); //do we need it?
@@ -61,58 +63,60 @@ public class JackTokenizer {
 
     public boolean checkComment() throws IOException
     {
-        Pattern commentPattern = Pattern.compile("\\/\\*\\*.*");
+        currLine = currLine.trim();
+        if (currLine.matches(WHITESPACE + COMMENT_REGEX))
+        {
+            currLine = fileReader.readLine();
+            return true;
+        }
+        Pattern commentPattern = Pattern.compile("(\\/\\*\\*|\\/\\*)");
         Matcher commentMatcher = commentPattern.matcher(currLine);
         if (commentMatcher.find()) {
+            if (commentMatcher.start() != 0)
+            {
+                return false;
+            }
+            String part = commentMatcher.group(1);
+            currLine = currLine.replaceFirst(Pattern.quote(part), "");
             Matcher closeComment = Pattern.compile("\\s*\\*\\/\\s*").matcher(currLine);
             while (!closeComment.find()) {
                 currLine = fileReader.readLine();
                 closeComment = Pattern.compile("\\s*\\*\\/\\s*").matcher(currLine);
             }
             currLine = currLine.substring(closeComment.end(), currLine.length());
-            return true;
+            checkComment();
         }
-        if (currLine.matches(WHITESPACE + COMMENT_REGEX))
-        {
-            currLine = fileReader.readLine();
-            return true;
-        }
-        //Pattern commentPattern = Pattern.compile("")
-//        if (currLine.contains("//")) {
-//            currLine = currLine.substring(0, currLine.indexOf("//"));
-//            if (currLine.isEmpty()) {
-//                currLine = fileReader.readLine();
-//                return true;
-//            }
-//        }
+
+
+
         return false;
     }
     public void advance() throws IOException
     {
-        currLine = currLine.trim();
+       currLine = currLine.trim();
+        isString = false;
         String[] parts = currLine.split(" ");
         currToken = parts[0];
+
         if (currToken.charAt(0) == '"') {
             currLine = currLine.substring(1, currLine.length());
             currToken = currLine.substring(0, currLine.indexOf('"'));
-            currLine = currLine.replace(currToken, "");
-            currLine = currLine.replaceFirst("\"", "");
-            currLine = currLine.replaceFirst("\"", "");
+            currLine = currLine.substring(currLine.indexOf('"')+1, currLine.length());
+            currToken = replaceSpecialSigns(currToken);
+            isString = true;
+          
             return;
         }
-        //if (tokenType() == null) {
-            Matcher matcher = Pattern.compile(SYMBOL_REGEX).matcher(currToken);
-            if (matcher.find()) {
-                int symbolIndex = matcher.start();
-                if (symbolIndex == 0) {
-                    currToken = Character.toString(currToken.charAt(0));
-                }
-                else {
-                    currToken = currToken.substring(0, symbolIndex);
-                }
+        Matcher matcher = Pattern.compile(SYMBOL_REGEX).matcher(currToken);
+        if (matcher.find()) {
+            int symbolIndex = matcher.start();
+            if (symbolIndex == 0) {
+                currToken = Character.toString(currToken.charAt(0));
             }
-            //else?
-        //}
+            else {
+                currToken = currToken.substring(0, symbolIndex);
+            }
+        }
         if (currToken.toCharArray().length == 1) {
             currLine = currLine.substring(1, currLine.length());
             return;
@@ -121,6 +125,10 @@ public class JackTokenizer {
     }
 
     public TokenType tokenType() {
+        if (isString)
+        {
+            return TokenType.STRING_CONST;
+        }
         Pattern pattern = Pattern.compile(SYMBOL_REGEX);
         Matcher matcher = pattern.matcher(currToken);
         if (matcher.matches()) {
@@ -171,6 +179,22 @@ public class JackTokenizer {
             return "&amp;";
         }
         return currToken;
+    }
+    private String replaceSpecialSigns(String stringToken)
+    {
+        if (stringToken.contains("<")) {
+            stringToken = stringToken.replaceAll("<", "&lt;");
+        }
+        else if (stringToken.contains(">")) {
+        	stringToken = stringToken.replaceAll(">", "&gt;");
+        }
+        else if (stringToken.contains("\"")) {
+        	stringToken = stringToken.replaceAll("\"", "&quot;");
+        }
+        else if (stringToken.contains("&")) {
+        	stringToken = stringToken.replaceAll("&", "&amp;");
+        }
+        return stringToken;
     }
     public void close () throws IOException{ fileReader.close();}
 }

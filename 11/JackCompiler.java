@@ -12,13 +12,12 @@ public class JackCompiler {
     private static void translateFile(File inputFile)
     		throws FileNotFoundException, IOException, IllegalTokenException 
     {
-        String fileName = inputFile.getAbsolutePath();
+        String fileName = inputFile.getName();
         String fileSuffix = fileName.substring(fileName.lastIndexOf(NAME_DELIMITER)+1,
         		fileName.length());
+	String outFileName = null;
         if (fileSuffix.equals(IN_SUFFIX)) {
-            String outFileName;
-            outFileName = fileName.substring(0,
-                    fileName.indexOf(NAME_DELIMITER)) + NAME_DELIMITER + OUT_SUFFIX;
+            outFileName = inputFile.getAbsolutePath().replace(IN_SUFFIX, OUT_SUFFIX);
             SymbolTable symbolTable = new SymbolTable();
             CompilationEngine compiler = new CompilationEngine(inputFile,
             		outFileName, symbolTable);
