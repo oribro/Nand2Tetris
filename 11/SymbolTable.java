@@ -99,28 +99,28 @@ public class SymbolTable {
 	
 	public String kindOf(String name)
 	{
-		if (classScopeTable.containsKey(name))
-			return classScopeTable.get(name).get(KIND_COLUMN);
 		if (methodScopeTable.containsKey(name))
 			return methodScopeTable.get(name).get(KIND_COLUMN);
+		if (classScopeTable.containsKey(name))
+			return classScopeTable.get(name).get(KIND_COLUMN);
 		return "none";
 	}
 	
 	public String typeOf(String name)
 	{
-		if (classScopeTable.containsKey(name))
-			return classScopeTable.get(name).get(TYPE_COLUMN);
 		if (methodScopeTable.containsKey(name))
 			return methodScopeTable.get(name).get(TYPE_COLUMN);
+		if (classScopeTable.containsKey(name))
+			return classScopeTable.get(name).get(TYPE_COLUMN);
 		return "none";
 	}
 	
 	public String indexOf(String name)
 	{
-		if (classScopeTable.containsKey(name))
-			return classScopeTable.get(name).get(INDEX_COLUMN);
 		if (methodScopeTable.containsKey(name))
 			return methodScopeTable.get(name).get(INDEX_COLUMN);
+		if (classScopeTable.containsKey(name))
+			return classScopeTable.get(name).get(INDEX_COLUMN);
 		return "none";
 	}
 	
