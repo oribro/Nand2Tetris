@@ -10,10 +10,14 @@
 class Math {
     static Array arr;
 	static int n;
+	static int yq;
+	static boolean plusOne;
     /** Initializes the library. */
     function void init() {
         var int j;
         var int sum;
+		let yq = 0;
+		let plusOne = false;
 		let n=16;
         let arr = Array.new(n);
         let j=1;
@@ -30,6 +34,9 @@ class Math {
         }
         return true;
     }
+	function int get2ToThe(int i) {
+		return arr[i];
+	}
     /** Returns the absolute value of x. */
     function int abs(int x) {
         if (x<0) {
@@ -68,8 +75,7 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-        var int q;
-		var int res;
+        var int res;
 		var boolean minus;
 		let minus=false;
 		if (x<0) {
@@ -86,18 +92,44 @@ class Math {
 		if (y>x) {
 			return 0;
 		}
-        let q = x/(y+y);
-        if ((x-((q+q)*y)) < y) { //compute without multiply!
-            let res=q+q;
-        }
-		else {
-        	let res = (q+q)+1;
-		}
+		let yq = 0;
+		let plusOne = false;
+		let res = Math.innerDivide(x,y);
+		let plusOne = false;	
+		let yq = 0;
+			
 		if (minus) {
 			return -res;
 		}
 		return res;
     }
+	function int innerDivide(int x, int y)
+	{
+		var int q; //update 
+		var int res;	
+		 if (x=0){
+            return 0;
+        }
+		if (y>x) {
+			return 0;
+		}
+		
+        let q = Math.innerDivide(x, y+y);
+		
+		if (plusOne) {
+			let yq = yq +y;
+		}	
+	
+        if ((x-(yq+yq)) < y) { 
+            let res=q+q;
+			let plusOne = false;
+        }
+		else {
+        	let res = (q+q)+1;
+			let plusOne = true;
+		}
+		return res;
+}
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
