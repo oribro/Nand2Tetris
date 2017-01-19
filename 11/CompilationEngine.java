@@ -546,8 +546,8 @@ public class CompilationEngine{
                 String value = tokenizer.getToken();
                 writer.writeToken(tokenizer);
                 if (value.matches("true")){
-                	writer.writePush(CONST, "1");
-                	writer.writeArithmetic("\\-");
+                	writer.writePush(CONST, "0");
+                	writer.writeArithmetic("~");
                 }
                 if (value.matches("false|null"))
                 	writer.writePush(CONST, "0");

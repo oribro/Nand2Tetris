@@ -102,7 +102,7 @@ public class JackTokenizer {
             currLine = currLine.substring(1, currLine.length());
             currToken = currLine.substring(0, currLine.indexOf('"'));
             currLine = currLine.substring(currLine.indexOf('"')+1, currLine.length());
-            currToken = replaceSpecialSigns(currToken);
+            //currToken = replaceSpecialSigns(currToken);
             isString = true;
           
             return;
@@ -180,21 +180,6 @@ public class JackTokenizer {
         }
         return currToken;
     }
-    private String replaceSpecialSigns(String stringToken)
-    {
-        if (stringToken.contains("<")) {
-            stringToken = stringToken.replaceAll("<", "&lt;");
-        }
-        else if (stringToken.contains(">")) {
-        	stringToken = stringToken.replaceAll(">", "&gt;");
-        }
-        else if (stringToken.contains("\"")) {
-        	stringToken = stringToken.replaceAll("\"", "&quot;");
-        }
-        else if (stringToken.contains("&")) {
-        	stringToken = stringToken.replaceAll("&", "&amp;");
-        }
-        return stringToken;
-    }
+   
     public void close () throws IOException{ fileReader.close();}
 }
