@@ -253,6 +253,7 @@ public class CompilationEngine{
             writer.writeToken(tokenizer);
             advance();
             checkType();
+            type = tokenizer.getToken();
             writer.writeToken(tokenizer);
             advance();
             checkNextIdentifier();
@@ -682,6 +683,7 @@ public class CompilationEngine{
         writer.writeToken(tokenizer);
         
         // pass this object to the method
+       
         writer.writeCall(name, nArgs);
         advance();
         return true;
