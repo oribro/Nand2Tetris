@@ -63,18 +63,25 @@ class Keyboard {
     function String readLine(String message) {
     	var String text;
     	var char ch;
+    	var int charsCounter;
     	do Output.printString(message);
     	let text = String.new(100);
     	while (-1){
     		let ch = Keyboard.readChar();
     		if (ch = String.newLine()){
+    			do Output.println();
     			return text;
     		}
-    		if (ch = String.backSpace() & (~(text.length()=0))){
-    			do text.eraseLastChar();
-    		}
-    		if (~(ch = String.newLine()) & (~(ch = String.backSpace()))){
+    		if (~(ch = String.backSpace())){
     			do text.appendChar(ch);
+    			let charsCounter = charsCounter + 1;
+    		}
+    		else{
+    			if(charsCounter > 0){
+				do text.eraseLastChar();
+				do Output.backSpace();
+				let charsCounter = charsCounter - 1;
+			}
     		}
     	}
     	return text;

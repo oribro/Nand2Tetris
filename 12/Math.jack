@@ -11,20 +11,18 @@ class Math {
     static Array arr;
 	static int n;
 	static int yq;
-	static boolean plusOne;
     /** Initializes the library. */
     function void init() {
-        var int j;
-        var int sum;
-		let yq = 0;
-		let plusOne = false;
+        var int i,j;
 		let n=16;
         let arr = Array.new(n);
-        let j=1;
-        let arr[0] = 1;
+        let j=0;
+        let i = 1;
         while (j<n) {
-			let arr[j] = arr[j-1] + arr[j-1];
+			let arr[j] = i;
 			let j = j+1;
+			let i = i + 1;
+			
         }
 		return;
     }
@@ -76,75 +74,71 @@ class Math {
      */
     function int divide(int x, int y) {
         var int res;
-		var boolean minus;
-		let minus=false;
-		if (x<0) {
-			let minus = ~minus;
-			let x = -x; 
-		}
-		if (y<0) {
-			let minus= ~minus;
-			let y=-y;
-		}
+		var boolean positiveResult;
+		let positiveResult=false;
+	
         if (x=0){
             return 0;
         }
-		if (y>x) {
-			return 0;
-		}
-		let yq = 0;
-		let plusOne = false;
-		let res = Math.innerDivide(x,y);
-		let plusOne = false;	
-		let yq = 0;
-			
-		if (minus) {
-			return -res;
-		}
-		return res;
+        if (y=0){
+       		return 0;
+       	}
+       	
+       	if(((x < 0) & (y < 0)) | ((y > 0) & (x > 0))){
+			let positiveResult=true;
+	}
+	let x = Math.abs(x);
+	let y = Math.abs(y);
+	let res = Math.innerDivide(x,y);
+
+
+	if (~positiveResult) {
+		return -res;
+	}
+	return res;
     }
 	function int innerDivide(int x, int y)
 	{
 		var int q; //update 
-		var int res;	
-		 if (x=0){
-            return 0;
-        }
+	
 		if (y>x) {
+			let yq = 0;
 			return 0;
 		}
 		
+		if (y = x){
+			let yq = 1;
+			return 1;
+		}
+		
+		if(y > 16382){
+				let yq = y;
+				return 1;
+		}
         let q = Math.innerDivide(x, y+y);
 		
-		if (plusOne) {
-			let yq = yq +y;
-		}	
 	
-        if ((x-(yq+yq)) < y) { 
-            let res=q+q;
-			let plusOne = false;
+        if ((x-yq) < y) { 
+            return q+q;
         }
 		else {
-        	let res = (q+q)+1;
-			let plusOne = true;
+        	let yq = yq + y;
 		}
-		return res;
+		return q+q+1;
 }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
 		var int j, y, res;
 		let y=0;
-		let j=255;
-		while (true) {
-			let res = (y+j)*(y+j);
-			if ((~(res>x)) & (res>0)) {
-				let y=y+j;
+		let j=7;
+		while (j > -1) {
+			let res = (y+arr[j])*(y+arr[j]);
+			if ((~(res>x)) & (res>-1)) {
+				let y=y+arr[j];
 			}
-			if (j=0) {
-				return y;
-			}
-			let j=j/2;
+			
+			let j=j-1;
 		}
 		return y; 
     }
