@@ -79,7 +79,7 @@ class Keyboard {
     		else{
     			if(charsCounter > 0){
 				do text.eraseLastChar();
-				do Output.backSpace();
+				//do Output.backSpace();
 				let charsCounter = charsCounter - 1;
 			}
     		}

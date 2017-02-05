@@ -9,20 +9,20 @@
  */
 class Math {
     static Array arr;
+    static int mult_of_q_y_2;
 	static int n;
-	static int yq;
+	
     /** Initializes the library. */
     function void init() {
-        var int i,j;
+        var int j, i;
 		let n=16;
         let arr = Array.new(n);
-        let j=0;
-        let i = 1;
-        while (j<n) {
-			let arr[j] = i;
-			let j = j+1;
-			let i = i + 1;
-			
+        let j=1;
+		let i=0;
+        while (i<n) {
+			let arr[i] = j;
+			let j = j+j;
+			let i=i+1;
         }
 		return;
     }
@@ -73,62 +73,71 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-        var int res;
-		var boolean positiveResult;
-		let positiveResult=false;
-	
-        if (x=0){
-            return 0;
-        }
-        if (y=0){
-       		return 0;
-       	}
-       	
-       	if(((x < 0) & (y < 0)) | ((y > 0) & (x > 0))){
-			let positiveResult=true;
+
+	var boolean change_result;
+	var int result;
+
+	// checking if it is an illegal division by zero
+	if(y = 0){
+		return 0;
 	}
-	let x = Math.abs(x);
+	// checking if x is zero
+	if(x = 0){
+		return 0;
+	}
+
+	let change_result = true;
+	// checking if the result should be positive
+	if(((y > 0) & (x > 0)) | ((x < 0) & (y < 0))){
+		let change_result = false;
+	}
+
+	// changing negative inputs to positive
 	let y = Math.abs(y);
-	let res = Math.innerDivide(x,y);
-
-
-	if (~positiveResult) {
-		return -res;
+	let x = Math.abs(x);
+	
+	// getting a result for the abs of the inputs
+	let result = Math.divide_positive(x, y);
+	
+	// returning the result with it's correct sign
+	if(~change_result){
+		return result;
 	}
-	return res;
+	return -result;
     }
-	function int innerDivide(int x, int y)
-	{
-		var int q; //update 
+
+    /** helper method that recursivly calculates the division of two positive numbers */
+    function int divide_positive(int x, int y){
+	var int q;
+	if(y > x){
+		let mult_of_q_y_2 = 0;
+		return 0;
+	}
+
+	if(y = x){
+		let mult_of_q_y_2 = 1;
+		return 1;
+	}
+
+	// in order to avoid overflow
+	if(y > 16382){
+		let mult_of_q_y_2 = y;
+		return 1;
+	}
+
+	// recursing untill a base case is met
+	let q = Math.divide_positive(x, (y + y));
 	
-		if (y>x) {
-			let yq = 0;
-			return 0;
-		}
-		
-		if (y = x){
-			let yq = 1;
-			return 1;
-		}
-		
-		if(y > 16382){
-				let yq = y;
-				return 1;
-		}
-        let q = Math.innerDivide(x, y+y);
-		
-	
-        if ((x-yq) < y) { 
-            return q+q;
-        }
-		else {
-        	let yq = yq + y;
-		}
-		return q+q+1;
-}
+	if((x - mult_of_q_y_2) < y){
+		return (q + q);
+	}
+	let mult_of_q_y_2 = mult_of_q_y_2 + y;
+	return (q + q + 1);
+    }
 
     /** Returns the integer part of the square root of x. */
-    function int sqrt(int x) {
+
+	function int sqrt(int x) {
 		var int j, y, res;
 		let y=0;
 		let j=7;
@@ -142,7 +151,6 @@ class Math {
 		}
 		return y; 
     }
-
     /** Returns the greater number. */
     function int max(int a, int b) {
 		if (a>b) {

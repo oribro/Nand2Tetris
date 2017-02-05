@@ -4,44 +4,50 @@
 // File name: projects/12/Output.jack
 
 /**
- * A library of functions for writing text on the screen.
- * The Hack physical screen consists of 512 rows of 256 pixels each.
- * The library uses a fixed font, in which each character is displayed 
- * within a frame which is 11 pixels high (including 1 pixel for inter-line 
- * spacing) and 8 pixels wide (including 2 pixels for inter-character spacing).
- * The resulting grid accommodates 23 rows (indexed 0..22, top to bottom)
- * of 64 characters each (indexed 0..63, left to right). The top left 
- * character position on the screen is indexed (0,0). A cursor, implemented
- * as a small filled square, indicates where the next character will be displayed.
+ * Handles writing characters to the screen.
+ * The text screen (256 columns and 512 roes) is divided into 23 text rows (0..22), 
+ * each containing 64 text columns (0..63).
+ * Each row is 11 pixels high (including 1 space pixel), and 8 pixels wide
+ * (including 2 space pixels).
  */
 class Output {
 
-    // Character map for displaying characters
-    static Array charMaps; 
-    static int xCursor;
-    static int yCursor;
-	static array screen;
-    /** Initializes the screen, and locates the cursor at the screen's top-left. */
+    // Character map for printing on the left of a screen word
+    // array to hold powers of two from 2^0 to 2^15
+    static Array charMaps, twoToThe;
+    static int line, column;
+   
+    /** Initializes the screen and locates the cursor at the screen's top-left. */
     function void init() {
-		do Output.initMap();
-		let xCursor= 0;
-		let yCursor=0;
-		let screen = 16384;
-		return;
+	var int i,j;
+
+	let line = 0;
+	let column = 0;
+
+	do Output.initMap();
+
+	// initializing the array that helps the calculate function
+	let twoToThe = Array.new(16);
+	let i = 0;
+	let j = 1;
+	while(i < 16){
+		let twoToThe[i] = j;
+		let j = j + j;
+		let i = i + 1;
+	}
+	return;
     }
 
-    // Initializes the character map array
+    // Initalizes the character map array
     function void initMap() {
         var int i;
     
         let charMaps = Array.new(127);
         
-        // Black square, used for displaying non-printable characters.
+        // black square (used for non printable characters)
         do Output.create(0,63,63,63,63,63,63,63,63,63,0,0);
 
         // Assigns the bitmap for each character in the charachter set.
-        // The first parameter is the character index, the next 11 numbers
-        // are the values of each row in the frame that represents this character.
         do Output.create(32,0,0,0,0,0,0,0,0,0,0,0);          //
         do Output.create(33,12,30,30,30,12,12,0,12,12,0,0);  // !
         do Output.create(34,54,54,20,0,0,0,0,0,0,0,0);       // "
@@ -78,7 +84,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0);          // A ** TO BE FILLED **
+        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0); // A FILLED according to book's drawing
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -106,7 +112,7 @@ class Output {
         do Output.create(90,63,51,49,24,12,6,35,51,63,0,0);  // Z
 
         do Output.create(91,30,6,6,6,6,6,6,6,30,0,0);          // [
-        do Output.create(92,0,0,1,3,6,12,24,48,32,0,0);        // "\"
+        do Output.create(92,0,0,1,3,6,12,24,48,32,0,0);        // 
         do Output.create(93,30,24,24,24,24,24,24,24,30,0,0);   // ]
         do Output.create(94,8,28,54,0,0,0,0,0,0,0,0);          // ^
         do Output.create(95,0,0,0,0,0,0,0,0,0,63,0);           // _
@@ -147,9 +153,9 @@ class Output {
 	return;
     }
 
-    // Creates the character map array of the given character index, using the given values.
+    // Creates a character map array of the given char index with the given values.
     function void create(int index, int a, int b, int c, int d, int e,
-                         int f, int g, int h, int i, int j, int k) {
+		         int f, int g, int h, int i, int j, int k) {
 	var Array map;
 
 	let map = Array.new(11);
@@ -170,115 +176,221 @@ class Output {
         return;
     }
     
-    // Returns the character map (array of size 11) of the given character.
-    // If the given character is invalid or non-printable, returns the
-    // character map of a black square.
+    // Returns the character map (array of size 11) for the given character
+    // If an invalid character is given, returns the character map of a black square.
     function Array getMap(char c) {
+        
         if ((c < 32) | (c > 126)) {
             let c = 0;
         }
+        
         return charMaps[c];
     }
 
-    /** Moves the cursor to the j-th column of the i-th row,
-     *  and erases the character displayed there. */
+    /** Moves the cursor to the j\92th column of the i\92th row,
+     *  and erases the character that was there. */
     function void moveCursor(int i, int j) {
-		let xCursor = j;
-		let yCursor = i;
-		//do Output.backSpace();
-		return;
+	// going to the right place	
+	let column = j;
+	let line = i;
+	// putting empty char in it
+	do Output.printChar(32);
+	// moving the curser one back
+	do Output.backSpace();
+	return;
     }
 
-    /** Displays the given character at the cursor location,
-     *  and advances the cursor one column forward. */
+    /** Prints c at the cursor location and advances the cursor one
+     *  column forward. */
     function void printChar(char c) {
-		var Array map;
-        var int address,mask,bitmap,i;
-        let map = Output.getMap(c);
-        let address = (yCursor*32*11) + (xCursor/2);
-        let mask = xCursor& 1;
-        let i = 0;
-        while( i < 11 ) {
-            let bitmap = map[i];
-            if( mask = 1 ) {
-                let bitmap = bitmap * 256;
-                let screen[address] = screen[address] & (-1 & 255) | bitmap;
-            }else{
-                let screen[address] = screen[address] & 255 | bitmap;
-            }
-            
-            let address = address + 32;
-            let i = i + 1;
-        }
-		/**var int i,j, row, column;
-		var Array mask;
-		let row=yCursor*11;
-		let column= xCursor*8;
-		let i=0;
-		let j=0;
-		let mask = Output.getMap(c);    	
-		while (i < 11 &j<8) {
-			do Screen.setColor(Math.bit(mask[i],j));
-			do Screen.drawPixel(column + j,row+i);
-			let i = i+1;
-			let j = j+1;
-		}
-*/
-		if( xCursor = 63 ) {
-            do Output.println();
-        }
-        else {
-            do Output.moveCursor(yCursor,xCursor+1);
-        }
+	var Array char_values;
+	var int row_index, col_index, screen_row, screen_col, i;
+	var boolean color;
+	
+	// dealing with special cases 
+	
+	// /n
+	if(c = 128){
+		let line = line + 1;
+		let column = 0;
 		return;
+	}
+	// Home
+	if(c = 134){
+		let column = 0;
+		return;
+	}
+	// End
+	if(c = 135){
+		let column = 63;
+		return;
+	}
+	// left
+	if(c = 130){
+		// if there is no more left to go
+		if(column = 0){
+			// if it's the top left corner do nothing
+			if(line = 0){
+				return;
+			}
+			// go up one line
+			let column = 63;
+			let line = line - 1;
+		}
+		// just moves to the left
+		else{
+			let column = column - 1;
+		}
+		return;
+	}
+	// right
+	if(c = 132){
+		// if there is no more right to go
+		if(column = 63){
+			// if it's the bottom right corner do nothing
+			if(line = 22){
+				return;
+			}
+			// go down one line
+			let column = 0;
+			let line = line + 1;
+		}
+		// just moves to the right
+		else{
+			let column = column + 1;
+		}
+		return;
+	}
+	// up
+	if(c = 131){
+		// if there is no more up
+		if(line = 0){
+			return;
+		}
+		let line = line - 1;
+		return;
+	}
+	// down
+	if(c = 133){
+		// if there is no more down
+		if(line = 22){
+			return;
+		}
+		let line = line + 1;
+		return;
+	}
+	// backSpace
+	if(c = 129){
+		do Output.backSpace();
+	}
+	// char is illegal
+	if ((c < 32) | (c > 126)) {
+            let c = 0;
+        }
+	
+	let screen_row = line * 11;
+	// calculating column * 8
+	let i = 0;
+	let screen_col = column;
+	while(i < 3){
+		let screen_col = screen_col + screen_col;
+		let i = i + 1;
+	}
+	// getting the values for the char
+	let char_values = Output.getMap(c);
+	let row_index = 0;
+	// looping on row 
+	while(row_index < 11){
+		let col_index = 0;
+		// looping on coulmns
+		while(col_index < 8){
+			// getting the relevant color from the map of the char c
+			let color = ~((char_values[row_index] & twoToThe[col_index]) = 0);
+			do Screen.setColor(color);
+			// drawing the color to the pixel
+			do Screen.drawPixel((screen_col + col_index), (screen_row + row_index));
+			let col_index = col_index + 1;
+		}
+		let row_index = row_index + 1;
+	}
+
+	// advancing the curser
+	// if it is in the bottom right go to start
+	if((column = 63) & (line = 22)){
+		let column = 0;
+		let line = 0;
+		return;
+	}
+	// if at the end of the line
+	if(column = 63){
+		let line = line + 1;
+		let column = 0;
+		return;
+	}
+	// just move right
+	let column = column + 1;
+	return;
     }
 
-    /** displays the given string starting at the cursor location,
-     *  and advances the cursor appropriately. */
+    /** Prints s starting at the cursor location, and advances the
+     *  cursor appropriately. */
     function void printString(String s) {
-		var int i, length;
-		let i=0;
-		let length = s.length();
-		while (i < length) {
-			do Output.printChar(s.charAt(i));
-			let i = i+1;
-		}
-		return;
-			
+	var char curr_char;
+	var int string_length, counter;
+	let counter = 0;
+	let string_length = s.length();
+	// looping char by char and printing
+	while(counter < string_length){
+		let curr_char = s.charAt(counter);
+		do Output.printChar(curr_char);
+		let counter = counter + 1;
+	}
+	return;
     }
 
-    /** Displays the given integer starting at the cursor location,
-     *  and advances the cursor appropriately. */
+    /** Prints i starting at the cursor location, and advances the
+     *  cursor appropriately. */
     function void printInt(int i) {
-		var String s;
-		let s=String.new(6);
-		do s.setInt(i);
-		do Output.printString(s);
-		do s.dispose();
-		return;
+	var String str_number;
+	// in this 16 bit system a decimal representation of a number can be at most 6 digits
+	let str_number = String.new(6);
+	// setting the string to contain the number
+	do str_number.setInt(i);
+	do Output.printString(str_number);
+	return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
-    	if (yCursor < 22) {
-			do Output.moveCursor(yCursor+1, 0);
-		}
-		else {
-			do Output.moveCursor(0,0);
-		}
+	// if it's the last line go to first line
+	if(line = 22){
 		return;
+	}
+	let line = line + 1;
+	let column = 0;
+	return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
-		if (xCursor = 0) {
-			if (~(yCursor = 0)) {
-				do Output.moveCursor(yCursor-1, 63);
-			}
-		}
-		else {
-			do Output.moveCursor(yCursor, xCursor-1);
-		}
+	// if we are at the start of the screen go 'back' to the end
+	if((column = 0) & (line = 0)){
+		let column = 63;
+		let line = 22;
 		return;
+	}
+	// if we are at the start of a line go back to the previous line
+	if(column = 0){
+		let column = 63;
+		let line = line - 1;
+		return;
+	}
+	// just go left
+	
+	let column = column - 1;
+	do Output.printChar(32);
+	let column = column -1;
+	return;
     }
+
 }

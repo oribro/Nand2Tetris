@@ -25,6 +25,7 @@ class Screen {
         let i = 0;
         while(i < 8192){
             let screen[i] = false;
+			let i = i +1;
         }
         return;		   
 	}
@@ -38,14 +39,33 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-		var int address, bitNum, setBit;
-		let address = (32*y)+(x/16);
+		var int address, bitNum, setBit, xDividedBy16, divisor, index, i;
 		let bitNum=x & 15;
-		let setBit=1;
-		while (bitNum > 0) {
-	    	let setBit=setBit*2;
-	    	let bitNum=bitNum-1;
+		let xDividedBy16 = 0;
+		let divisor = 16;
+		while(~(x < divisor)){
+			let index = 4;
+			// looping untill finding big enough divisor (in powers of two)
+			while(~(x < divisor)){
+				let index = index + 1;
+				let divisor = Math.get2ToThe(index);
+			}
+			// updating the result and the dividend(x)
+			let x = x - Math.get2ToThe(index - 1);
+			let xDividedBy16 = xDividedBy16 + Math.get2ToThe(index - 5);
+			let divisor = 16;
 		}
+	
+		// calculating row * 32 (the new y will be y*32)
+		let i = 0;
+		while(i < 5){
+			let y = y + y;
+			let i = i + 1;
+		}
+
+		let address= y + xDividedBy16;			
+		let setBit= Math.get2ToThe(bitNum);
+
 		if (color) {
 	    	let screen[address] = screen[address]|setBit;
 		}
@@ -146,13 +166,14 @@ class Screen {
 	}
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
-		var int dy, sqrt;
+		var int dy, sqrt, rToThe2;
+		let rToThe2 = r*r;
 		let dy=-r;
-		while (dy<r) {
-			let sqrt = Math.sqrt((r*r)-(dy*dy));
+		while (dy< (r+1)) {
+			let sqrt = Math.sqrt((rToThe2)-(dy*dy));
 			do Screen.drawLine(x-sqrt, y+dy, x+sqrt, y+dy);
 			let dy = dy+1;
 		}
-		return;    
+		return;  
 	}
 }
